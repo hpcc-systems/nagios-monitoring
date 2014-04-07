@@ -1,0 +1,220 @@
+#!/bin/sh
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+# Changes
+#
+# 1.1:
+#   Added the -f/--file option for PID file support
+#
+# 1.0:
+#   Initial version
+#
+PROGNAME=`basename $0`
+VERSION="Version 1.1"
+AUTHOR="Copyright 2013, Charles Williams (chuck@itadmins.net) (http://www.itadmins.net/)"
+
+ST_OK=0
+ST_WR=1
+ST_CR=2
+ST_UK=3
+missing="O"
+
+print_version() {
+    echo "$VERSION $AUTHOR"
+}
+
+print_help() {
+    print_version $PROGNAME $VERSION
+    echo ""
+    echo "$PROGNAME is a Nagios plugin to check a specific process via ps"
+    echo "and report how long it has been running."
+    echo "You must provide a complete string for the process to be checked"
+    echo "as well as the warning and critical time constraints (in seconds)."
+    echo ""
+    echo "$PROGNAME -p 'sh /usr/local/somecommand' -w 120 -c 240"
+    echo ""
+    echo "Options:"
+    echo "  -p/--process)"
+    echo "     You need to provide a string containing the exact process"
+    echo "  -f/--file)"
+    echo "     Name PID file containing the PID of the process to check" 
+    echo "  -w/--warning)"
+    echo "     Defines a warning level for a target which is explained"
+    echo "     below."
+    echo "  -c/--critical)"
+    echo "     Defines a critical level for a target which is explained"
+    echo "     below."
+    echo "  -m/--missing)"
+    echo "     Check state to be reported if the process is missing (not"
+    echo "     running). C,W,U,O - Default is OK"
+    exit $ST_UK
+}
+
+while test -n "$1"; do
+    case "$1" in
+        -help|-h)
+            print_help
+            exit $ST_UK
+            ;;
+        --version|-v)
+            print_version $PROGNAME $VERSION
+            exit $ST_UK
+            ;;
+        --process|-p)
+            process=$2
+            shift
+            ;;
+        --file|-f)
+        			if [ -f $2 ]
+        			then
+            		pidfileval=$(cat $2)
+            else
+            	echo "The PID file provided can not be found!"
+            fi
+            exit $ST_UK
+            ;;
+        --warning|-w)
+            warning=$2
+            shift
+            ;;
+        --critical|-c)
+            critical=$2
+            shift
+            ;;
+	--missing|-m)
+	    missing=$2
+	    shift
+	    ;;
+        *)
+            echo "Unknown argument: $1"
+            print_help
+            exit $ST_UK
+            ;;
+        esac
+    shift
+done
+
+get_proc() {
+	if [ -z "$process" -a -z "$pidfileval" ]
+	then
+		echo "Please provide a process or PID file to check!"
+		print_help
+		exit $ST_UK
+	fi
+}
+
+get_wcdiff() {
+    if [ ! -z "$warning" -a ! -z "$critical" ]
+    then
+        wclvls=1
+        if [ ${warning} -gt ${critical} ]
+        then
+            wcdiff=1
+        fi
+    elif [ ! -z "$warning" -a -z "$critical" ]
+    then
+        wcdiff=2
+    elif [ -z "$warning" -a ! -z "$critical" ]
+    then
+        wcdiff=2
+    elif [ -z "$warning" -o -z "$critical" ]
+    then
+    	wcdiff=2
+    fi
+}
+
+val_wcdiff() {
+    if [ "$wcdiff" = 1 ]
+    then
+        echo "Please adjust your warning/critical thresholds. The warning \
+must be lower than the critical level!"
+			print_help
+        exit $ST_UK
+    elif [ "$wcdiff" = 2 ]
+    then
+        echo "Please also set a warning AND critical threshold!"
+        print_help
+        exit $ST_UK
+    fi
+}
+
+get_vals() {
+	tpid=0
+	tseconds=0
+	old_ifs=$IFS
+	
+	if [ -z $pidfileval ]
+	then
+		for ps_pid in $(pgrep -f "${process}") ; do
+	    	if [ -z "$ps_pid" -a "$missing" = "C" ]
+	    	then
+		      	echo "CRITICAL - Process is not running!"
+	      		exit $ST_CR
+			elif [ -z "$ps_pid" -a "$missing" = "W" ]
+			then
+				echo "WARNING - Process is not running."
+				exit $ST_WA
+			elif [ -z "$ps_pid" -a "$missing" = "U" ]
+			then
+				echo "UNKOWN - Process is not running."
+				exit $ST_UK
+			elif [ -z "$ps_pid" -a "$missing" = "O" ]
+			then
+				echo "OK - Process is not running."
+				exit $ST_OK
+	    	fi
+	
+			running=$(($(awk '{print $1}' FS=\. /proc/uptime) - $(awk '{printf ("%10d\n",$22/100)}' /proc/$ps_pid/stat)))
+			if [ "$running" -gt "$tseconds" ]
+			then
+				tseconds=$running
+				tpid=$ps_pid
+			fi
+		done
+	else
+			ps_pid=$pidfileval
+			running=$(($(awk '{print $1}' FS=\. /proc/uptime) - $(awk '{printf ("%10d\n",$22/100)}' /proc/$ps_pid/stat)))
+			process=$(awk '{gsub (/\(|\)/, ""); printf ("%s\n",$2)}' /proc/$ps_pid/stat)
+			if [ "$running" -gt "$tseconds" ]
+			then
+				tseconds=$running
+				tpid=$ps_pid
+			fi
+	fi
+
+	ps_pid=$tpid
+	running=$tseconds
+}
+
+get_proc
+get_wcdiff
+val_wcdiff
+get_vals
+
+output="Process: ${process}, PID: ${ps_pid}, Elapsed Time: ${ps_stime}"
+perfdata="'PROCESS'=${process} 'PID'=${ps_pid} 'ETIME'=${running}"
+
+if [ "$running" -ge "$warning" -a "$running" -lt "$critical" ]
+then
+	echo "WARNING - ${output} | ${perfdata}"
+	exit $ST_WR
+elif [ "$running" -ge "$critical" ]
+then
+	echo "CRITICAL - ${output} | ${perfdata}"
+	exit $ST_CR
+else
+   echo "OK - ${output} | ${perfdata} ]"
+	exit $ST_OK
+fi
