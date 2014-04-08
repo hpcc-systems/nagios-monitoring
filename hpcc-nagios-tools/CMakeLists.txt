@@ -39,7 +39,7 @@ include_directories (
 
 ADD_DEFINITIONS( -D_CONSOLE )
 
-HPCC_ADD_LIBRARY( hpcc-nagios-tools SHARED ${SRCS}  )
+HPCC_ADD_EXECUTABLE( hpcc-nagios-tools ${SRCS}  )
 #add_dependencies (hpcc-nagios-tools )
 install ( TARGETS hpcc-nagios-tools RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )
 target_link_libraries ( hpcc-nagios-tools
