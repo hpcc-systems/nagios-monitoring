@@ -2,7 +2,9 @@ project (hpccsystems-nagios-monitoring)
 cmake_minimum_required (VERSION 2.8.2)
 
 set (HPCC_NM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+MESSAGE ("************ Setting CMAKE_MODULE_PATH to ${HPCC_NM_SOURCE_DIR}/cmake_modules/")
 set (CMAKE_MODULE_PATH "${HPCC_NM_SOURCE_DIR}/cmake_modules/")
+MESSAGE ("CMAKE_MODULE_PATH is set to ${CMAKE_MODULE_PATH}")
 
 ###
 ## Build Level
@@ -18,17 +20,27 @@ if (NOT LICENSE_FILE)
     set (LICENSE_FILE "LICENSE.txt")
 endif()
 
+MESSAGE ( "CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
+
+
 set (HPCC_SOURCE_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 IF ("${HPCC_SOURCE_DIR}" STREQUAL "")
   SET (HPCC_SOURCE_DIR ${HPCC_SOURCE_ROOT_DIR}/HPCC-Platform)
 ENDIF()
 
+MESSAGE ( "32 - CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
+
+
 include (${HPCC_NM_SOURCE_DIR}/version.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/optionDefaults.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/nmCommonSetup.cmake)
 include (${HPCC_SOURCE_DIR}/version.cmake)
 
+MESSAGE ( "40 - CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
+
+
+MESSAGE ( "CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
 
 SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti -fPIC -fmessage-length=0 -Wformat -Wformat-security -Wformat-nonliteral -pthread -Wuninitialized")
 
@@ -38,8 +50,12 @@ ADD_SUBDIRECTORY(${HPCC_SOURCE_DIR} oss EXCLUDE_FROM_ALL)
 CONFIGURE_FILE(${HPCC_SOURCE_DIR}/build-config.h.cmake "build-config.h" )
 MESSAGE("*** END BUILDING HPCC PLATFORM ***")
 
+MESSAGE ( "CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
+
+
 #HPCC_ADD_SUBDIRECTORY (esp)
 #HPCC_ADD_SUBDIRECTORY (initfiles)
+HPCC_ADD_SUBDIRECTORY( hpcc-nagios-tools )
 
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${majorver})
@@ -49,7 +65,21 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${point}${stagever})
 
 set (CPACK_PACKAGE_CONTACT "HPCCSystems <ossdevelopment@lexisnexis.com>")
 set (CPACK_SOURCE_GENERATOR TGZ )
+if ( ${ARCH64BIT} EQUAL 1 )
+    set ( CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
+else( ${ARCH64BIT} EQUAL 1 )
+    set ( CPACK_RPM_PACKAGE_ARCHITECTURE "i386")
+endif ( ${ARCH64BIT} EQUAL 1 )
+
 set (CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${CPACK_RPM_PACKAGE_ARCHITECTURE}")
+
+MESSAGE ( "CPACK_RPM_PACKAGE_ARCHITECTURE ${CPACK_RPM_PACKAGE_ARCHITECTURE}" )
+MESSAGE ( "CPACK_SYSTEM_NAME ${CPACK_SYSTEM_NAME}" )
+MESSAGE ( "CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
+MESSAGE ( "${CMAKE_MODULE_PATH}/distrocheck.sh" )
+MESSAGE ( "HPCC_NM_SOURCE_DIR ${HPCC_NM_SOURCE_DIR}" )
+
+
 
 IF ( CMAKE_SYSTEM_NAME MATCHES Linux )
     EXECUTE_PROCESS (
@@ -147,8 +177,8 @@ IF (NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.2")
 
     SET ( CPACK_MONOLITHIC_INSTALL TRUE )
 		SET ( CPACK_PACKAGE_VENDOR "HPCC Systems" )
-		INSTALL( FILES "${CMAKE_CURRENT_SOURCE_DIR}/modroxie.py" DESTINATION ${CMAKE_LIBRARY_PATH}/nagios/python_modules  )
-		INSTALL( FILES "${CMAKE_CURRENT_SOURCE_DIR}/modroxie.pyconf" DESTINATION /etc/nagios/conf.d  )
+#		INSTALL( FILES "${CMAKE_CURRENT_SOURCE_DIR}/modroxie.py" DESTINATION ${CMAKE_LIBRARY_PATH}/nagios/python_modules  )
+#		INSTALL( FILES "${CMAKE_CURRENT_SOURCE_DIR}/modroxie.pyconf" DESTINATION /etc/nagios/conf.d  )
 		INCLUDE ( CPack )
 ELSE()
     MESSAGE("WARNING: CMAKE 2.8.1 or later required to create RPMs from this project")

@@ -112,7 +112,7 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
     set( PORTALURL "http://hpccsystems.com/download" )
   endif()
 
-  set(CMAKE_MODULE_PATH "${HPCC_GM_SOURCE_DIR}/cmake_modules/")
+  set(CMAKE_MODULE_PATH "${HPCC_NM_SOURCE_DIR}/cmake_modules/")
 
   ##########################################################
 

@@ -27,18 +27,20 @@ project( hpcc-nagios-tools )
 set (   SRCS
         main.cpp
         HPCCNagiosToolSet.cpp
-
     )
 
-         ${HPCC_SOURCE_DIR}/common
-         ${CMAKE_BINARY_DIR}
-         ${CMAKE_BINARY_DIR}/oss
+include_directories (
+        ${HPCC_SOURCE_DIR}/common
+        ${HPCC_SOURCE_DIR}/system/jlib
+        ${HPCC_SOURCE_DIR}/system/include
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_BINARY_DIR}/oss
     )
 
 ADD_DEFINITIONS( -D_CONSOLE )
 
 HPCC_ADD_LIBRARY( hpcc-nagios-tools SHARED ${SRCS}  )
-add_dependencies (hpcc-nagios-tools )
+#add_dependencies (hpcc-nagios-tools )
 install ( TARGETS hpcc-nagios-tools RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )
 target_link_libraries ( hpcc-nagios-tools
          jlib

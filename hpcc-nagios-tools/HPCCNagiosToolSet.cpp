@@ -97,7 +97,7 @@ bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePa
 
     for (int n = 0; n < arrProcessTypes.length(); n++)
     {
-        //const char *pl
+
         delete &(arrProcessTypes.item(n));
     }
 }
