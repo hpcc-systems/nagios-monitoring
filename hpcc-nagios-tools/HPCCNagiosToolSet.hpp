@@ -19,6 +19,7 @@ protected:
 
     //void createServiceDefinitionString(const char)
     void createHostGroupString(StringArray &pIP, StringBuffer &strHostGroup);
+    static bool generateNagiosHostConfig(StringBuffer &strHostConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
 };
 
 #endif // _HPCC_NAGIOSTOOLSET_HPP_

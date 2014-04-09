@@ -17,9 +17,9 @@ int main(int argc, char *argv[])
     }
     else if (stricmp(argv[1], "-s") == 0 || stricmp(argv[1], "-service") == 0)
     {
-        if (argc == 3)
+        if (argc == 4)
         {
-            CHPCCNagiosToolSet::generateServiceDefinitionFile(const_cast<const char*>(argv[2]));//, const_cast<const char*>(argv[3]));
+            CHPCCNagiosToolSet::generateServiceDefinitionFile(const_cast<const char*>(argv[3]), const_cast<const char*>(argv[2]));//, const_cast<const char*>(argv[3]));
         }
         else
         {
