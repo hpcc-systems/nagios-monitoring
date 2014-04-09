@@ -61,45 +61,57 @@ bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePa
     int nCount = 0;
     char pProcess[1024] = "";
 
-    char *pch = NULL;
-    pch = strtok(pOutput, ",\n");
+    MapIPtoNode mapIPtoHostName;
 
     StringBuffer strServiceConfig;
 
-    CHPCCNagiosToolSet::generateNagiosHostConfig(strServiceConfig, pEnvXML);
-#ifdef _USE_OTHER_STUFF_
+    CHPCCNagiosToolSet::generateNagiosHostConfig(strServiceConfig, mapIPtoHostName, pEnvXML);
+
+//#ifdef _USE_OTHER_STUFF_
     int i = -1;
+    char *pch = NULL;
+    bool bAdd = false;
+    pch = strtok(pOutput, ",\n");
+
     while (pch != NULL)
     {
         if (nCount % 6 ==  0) // Process name
         {
             if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
             {
-                strcpy(pProcess, pch);
+                strncpy(pProcess, pch, sizeof(pProcess));
+                bAdd = true;
                 i = 0;
             }
             else if (pProcess == NULL || *pProcess == 0 || strcmp(pProcess, pch) != 0)
             {
                 strncpy(pProcess, pch, sizeof(pProcess));
+                bAdd = true;
                 i++;
             }
             else if (strcmp(pProcess,pch) == 0)
             {
                 i++;
+                bAdd = false;
             }
         }
         else if (nCount % 6 == 2) // IP address
         {
-            strServiceConfig.append(P_NAGIOS_HOST_CONFIG_1).append(pProcess).append(i).append(P_NAGIOS_HOST_CONFIG_2).append(pProcess).append(" ")\
-                                                                    .append(i).append(P_NAGIOS_HOST_CONFIG_3).append(pch).append(P_NAGIOS_HOST_CONFIG_4);
-            strServiceConfig.append("\n");
+            if (bAdd == true)
+            {
+                strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).append("")\
+                        .append(P_NAGIOS_SERVICE_CONFIG_3).append("COMMAND_TO_DO").append(P_NAGIOS_SERVICE_CONFIG_4).append(pch).append(P_NAGIOS_SERVICE_CONFIG_5);
+
+                strServiceConfig.append("\n");
+                bAdd = false;
+            }
         }
 
         pch = strtok(NULL, ",\n");
 
         nCount++;
     }
-#endif // _USE_OTHER_STUFF_
+//#endif // _USE_OTHER_STUFF_
     io->write(0, strServiceConfig.length(), strServiceConfig.str());
     io->close();
 
@@ -121,7 +133,7 @@ void CHPCCNagiosToolSet::createHostGroupString(StringArray &pIP, StringBuffer &s
 
 }
 
-bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, const char* pEnvXML, const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, MapIPtoNode &mapIPtoHostName, const char* pEnvXML, const char* pConfigGenPath)
 {
     if (pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
     {
@@ -197,6 +209,11 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, c
             strHostConfig.append(P_NAGIOS_HOST_CONFIG_1).append(pHostName).append(i).append(P_NAGIOS_HOST_CONFIG_2).append(pHostName).append(" ")\
                                                                     .append(i).append(P_NAGIOS_HOST_CONFIG_3).append(pch).append(P_NAGIOS_HOST_CONFIG_4);
             strHostConfig.append("\n");
+
+            struct NodeName nm;
+            nm.strHostName.setf("%s%d",pHostName, i);
+            nm.strHostAlias.setf("%s %d", pHostName, i);
+            mapIPtoHostName.setValue(pch, nm);
 
             i++;
         }

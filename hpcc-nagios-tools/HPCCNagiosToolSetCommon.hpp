@@ -1,10 +1,21 @@
 #ifndef _HPCC_NAGIOS_TOOL_SET_COMMON_HPP_
 #define _HPCC_NAGIOS_TOOL_SET_COMMON_HPP_
 
+#include "jstring.hpp"
+#include "jhash.hpp"
+
 static const char *PCONFIGGEN_PARAM_LIST(" -list ");
 static const char *PCONFIGGEN_PARAM_LIST_ALL(" -listall ");
 static const char *PCONFIGGEN_PARAM_ENVIRONMENT(" -env ");
 static const char *PCONFIGGEN_PARAM_MACHINES(" -machines ");
+
+struct NodeName
+{
+    StringBuffer strHostName;
+    StringBuffer strHostAlias;
+};
+
+typedef MapStringTo<NodeName> MapIPtoNode;
 
 /*
 define host{
@@ -35,16 +46,16 @@ define service {
 }
 */
 static const char *P_NAGIOS_SERVICE_CONFIG_1("define service\n\
-    {\n\
-        use                 generic-service\n\
-        host_name   ");
-static const char *P_NAGIOS_SERVICE_CONFIG_2("\
-        service_description ");
-static const char *P_NAGIOS_SERVICE_CONFIG_3("\
-        check_command       ");
+{\n\
+    use                 generic-service\n\
+    host_name           ");
+static const char *P_NAGIOS_SERVICE_CONFIG_2("\n\
+    service_description ");
+static const char *P_NAGIOS_SERVICE_CONFIG_3("\n\
+    check_command       ");
 static const char *P_NAGIOS_SERVICE_CONFIG_4("!");  // NOT SURE IF THIS IS USEFUL
 static const char *P_NAGIOS_SERVICE_CONFIG_5("\n\
-    }\n");
+}\n");
 
 /*
 define service {
@@ -56,16 +67,16 @@ define service {
 }
 */
 static const char *P_NAGIOS_SERVICE_DEFINITION_CONFIG_1("define service\n\
-    {\n\
-        hostgroup_name      ");
-static const char *P_NAGIOS_SERVICE_DEFINITION_CONFIG_2("\
-        service_description ");
-static const char *P_NAGIOS_SERVICE_DEFINITION_CONFIG_3("\
-        check_command       ");
-static const char *P_NAGIOS_SERVICE_DEFINITION_CONFIG_4("\
-        use                 generic-service\n\
-        notification_interval 0\n\
-    }\n");
+{\n\
+    hostgroup_name      ");
+static const char *P_NAGIOS_SERVICE_DEFINITION_CONFIG_2("\n\
+    service_description ");
+static const char *P_NAGIOS_SERVICE_DEFINITION_CONFIG_3("\n\
+    check_command       ");
+static const char *P_NAGIOS_SERVICE_DEFINITION_CONFIG_4("\n\
+    use                 generic-service\n\
+    notification_interval 0\n\
+}\n");
 
 
 /*
@@ -74,6 +85,6 @@ define hostgroup {
                 alias           MySQL servers
                 members         localhost, server02
         }
-*/
+*/                                                       
 
 #endif // _HPCC_NAGIOS_TOOL_SET_COMMON_HPP_
