@@ -88,6 +88,16 @@ define hostgroup {
                 alias           MySQL servers
                 members         localhost, server02
         }
-*/                                                       
+*/
+
+static const char *P_NAGIOS_HOSTS_GROUP_CONFIG_1("define hostgroup\n\
+{\n\
+    hostgroup_name      ");
+static const char *P_NAGIOS_HOSTS_GROUP_CONFIG_2("\n\
+    alias               ");
+static const char *P_NAGIOS_HOSTS_GROUP_CONFIG_3("\n\
+    members             ");
+static const char *P_NAGIOS_HOSTS_GROUP_CONFIG_4("\n\
+}\n");
 
 #endif // _HPCC_NAGIOS_TOOL_SET_COMMON_HPP_

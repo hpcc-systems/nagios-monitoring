@@ -54,15 +54,109 @@ bool CHPCCNagiosToolSet::generateHostGroupsFile(const char* pOutputFilePath, con
 
     int nCount = 0;
     char pProcess[1024] = "";
+    bool bAdd = false;
+    char *pch = NULL;
+    char pHostName[1024] = "";
+    StringBuffer strHostConfig;
+    int i = 0;
 
-    StringBuffer strServiceConfig;
+    pch = strtok(pOutput, ",\n");
+
+    while (pch != NULL)
+    {
+        if (nCount % 6 ==  0) // Process name
+        {
+            if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
+            {
+                strHostConfig.append(P_NAGIOS_HOSTS_GROUP_CONFIG_4);
+                strHostConfig.append("\n");
+                strncpy(pProcess, pch, sizeof(pProcess));
+                bAdd = true;
+                i = 0;
+            }
+            else if (pProcess == NULL || *pProcess == 0 || strcmp(pProcess, pch) != 0)
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                bAdd = true;
+                i++;
+            }
+            else if (strcmp(pProcess,pch) == 0)
+            {
+                i++;
+                bAdd = false;
+            }
+        }
+        else if (nCount % 6 == 2) // IP address
+        {
+            static bool bDoLookUp = true;
+            hostent *hp;
+
+            memset(pHostName,0,sizeof(pHostName));
+
+            if (bDoLookUp == true)
+            {
+                unsigned int addr = inet_addr(pch);
+                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
+            }
+
+            if (hp == NULL)
+            {
+                bDoLookUp = false;
+                if (strcmp(pch, pHostName) == 0)
+                {
+                    pch = strtok(NULL, ",\n");
+                    nCount++;
+
+                    continue;
+                }
+                strcpy(pHostName, pch);
+            }
+            else
+            {
+                if (strcmp(pch, pHostName) == 0)
+                {
+                    pch = strtok(NULL, ",\n");
+                    nCount++;
+
+                    continue;
+                }
+                strcpy(pHostName,hp->h_name);
+            }
+
+            static char pLastHostName[1024] = "";
+
+            if (bAdd == true)
+            {
+                strHostConfig.append(P_NAGIOS_HOSTS_GROUP_CONFIG_1).append(pProcess).append("-servers").append(P_NAGIOS_HOSTS_GROUP_CONFIG_2).append(pProcess).append(" servers")\
+                                                                        .append(P_NAGIOS_HOSTS_GROUP_CONFIG_3).append(pHostName);
+
+                strcpy(pLastHostName,pHostName);
+                bAdd = false;
+            }
+            else
+            {
+                if (strcmp(pLastHostName,pHostName) != 0)
+                {
+                    strHostConfig.append(", ").append(pHostName);
+                    strcpy(pLastHostName,pHostName);
+                }
+            }
+        }
+
+        pch = strtok(NULL, ",\n");
+
+        nCount++;
+    }
+
+    io->write(0, strHostConfig.length(), strHostConfig.str());
+    io->close();
 
     delete pOutput;
 
     return true;
 }
 
-bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateHostConfigurationsFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
 {
     if (pOutputFilePath == NULL || *pOutputFilePath == 0 || pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
     {
@@ -167,21 +261,6 @@ bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePa
     delete pOutput;
 }
 
-bool CHPCCNagiosToolSet::generateServiceDefinitionFile(StringBuffer &strOutput, const char* pEnvXML, const char* pConfigGenPath)
-{
-    return true;
-}
-
-bool CHPCCNagiosToolSet::generateHostGroupsFile(StringBuffer &strOutput, const char* pConfigGenPath)
-{
-    return true;
-}
-
-void CHPCCNagiosToolSet::createHostGroupString(StringArray &pIP, StringBuffer &strHostGroup)
-{
-
-}
-
 bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, MapIPtoNode &mapIPtoHostName, const char* pEnvXML, const char* pConfigGenPath)
 {
     if (pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
@@ -272,5 +351,10 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, M
         nCount++;
     }
 
+    return true;
+}
+
+bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath )
+{
     return true;
 }
