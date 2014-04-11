@@ -1,9 +1,14 @@
 #include "HPCCNagiosToolSet.hpp"
 #include "jstring.hpp"
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
-    if (stricmp(argv[1], "-o") == 0 || stricmp(argv[1], "-host") == 0)
+    if (argc == 1 || stricmp(argv[1],"-h") == 0 || stricmp(argv[1],"-help") == 0)
+    {
+        std::cout << "Help";
+    }
+    else if (stricmp(argv[1], "-o") == 0 || stricmp(argv[1], "-host") == 0)
     {
         if (argc == 3)
         {

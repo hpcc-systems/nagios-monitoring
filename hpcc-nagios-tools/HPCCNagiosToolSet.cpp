@@ -6,9 +6,60 @@
 #include "HPCCNagiosToolSetCommon.hpp"
 #include <cstring>
 
-bool CHPCCNagiosToolSet::generateHostGroupFile(const char* pOutputFilePath, const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateHostGroupsFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
 {
+    if (pOutputFilePath == NULL || *pOutputFilePath == 0 || pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
+    {
+        return false;
+    }
 
+    MemoryBuffer memBuff;
+    StringBuffer strConfiggenCmdLine(pConfigGenPath);
+
+    strConfiggenCmdLine.append(PCONFIGGEN_PARAM_LIST_ALL).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+
+    FILE *fp = popen(strConfiggenCmdLine.str(), "r");
+
+    if (fp == NULL)
+    {
+        return false;
+    }
+
+    int nCharacter = -1;
+    CFileInputStream cfgInputStream(fileno(fp));
+
+    memBuff.clear();
+
+    do
+    {
+        nCharacter = cfgInputStream.readNext();
+        memBuff.append(static_cast<unsigned char>(nCharacter));
+    }
+    while(nCharacter != -1);
+
+    memBuff.append('\0');
+
+    OwnedIFile outputFile = createIFile(pOutputFilePath);
+    OwnedIFileIO io = outputFile->open(IFOcreaterw);
+
+    if (io == NULL)
+    {
+        return false;
+    }
+
+    StringBuffer strOutput(memBuff.toByteArray());
+    strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
+    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+    char *pOutput = strdup(strOutput.str());
+
+    int nCount = 0;
+    char pProcess[1024] = "";
+
+    StringBuffer strServiceConfig;
+
+    delete pOutput;
+
+    return true;
 }
 
 bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
@@ -38,7 +89,6 @@ bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePa
     do
     {
         nCharacter = cfgInputStream.readNext();
-
         memBuff.append(static_cast<unsigned char>(nCharacter));
     }
     while(nCharacter != -1);
@@ -67,7 +117,6 @@ bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePa
 
     CHPCCNagiosToolSet::generateNagiosHostConfig(strServiceConfig, mapIPtoHostName, pEnvXML);
 
-//#ifdef _USE_OTHER_STUFF_
     int i = -1;
     char *pch = NULL;
     bool bAdd = false;
@@ -111,7 +160,7 @@ bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePa
 
         nCount++;
     }
-//#endif // _USE_OTHER_STUFF_
+
     io->write(0, strServiceConfig.length(), strServiceConfig.str());
     io->close();
 
@@ -123,7 +172,7 @@ bool CHPCCNagiosToolSet::generateServiceDefinitionFile(StringBuffer &strOutput, 
     return true;
 }
 
-bool CHPCCNagiosToolSet::generateHostGroupFile(StringBuffer &strOutput, const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateHostGroupsFile(StringBuffer &strOutput, const char* pConfigGenPath)
 {
     return true;
 }

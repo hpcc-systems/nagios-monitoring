@@ -4,7 +4,10 @@
 #include "jstring.hpp"
 #include "jhash.hpp"
 
-static const char *PCONFIGGEN_PARAM_LIST(" -list ");
+static const char *P_CHECK_NRPE_1_ARG("check_nrpe_1_arg!");
+static const char *P_CHECK_NRPE_2_ARG("check_nrpe_2_arg!");
+
+static const char *P_CONFIGGEN_PARAM_LIST(" -list ");
 static const char *PCONFIGGEN_PARAM_LIST_ALL(" -listall ");
 static const char *PCONFIGGEN_PARAM_ENVIRONMENT(" -env ");
 static const char *PCONFIGGEN_PARAM_MACHINES(" -machines ");
