@@ -1,38 +1,104 @@
 #include "HPCCNagiosToolSet.hpp"
 #include "jstring.hpp"
 #include <iostream>
+#include "jstring.hpp"
+
+void usage()
+{
+    std::cout << "HPCC Systems Nagios configuration file generator\n\
+Usage: hpcc-nagios-tools -env <environment file> -out <output path> [options]\n";
+    std::cout << "  -c or -cfggen     : The path to the configgen.  (Default: /opt/HPCCSystems/sbin/configgen)\n";
+    std::cout << "  -g or -hostgroup  : generate host group file\n";
+    std::cout << "  -s or -service    : generate service and host file\n";
+    std::cout << "  -e or -env        : hpcc environment configuration file (Default: /etc/HPCCSystems/environment.xml)\n";
+    std::cout << "  -o or -output     : outpfile where the generated configuration will be written\n";
+
+}
 
 int main(int argc, char *argv[])
 {
-    if (argc == 1 || stricmp(argv[1],"-h") == 0 || stricmp(argv[1],"-help") == 0)
+    int i = 1;
+    StringBuffer strConfigGenPath;
+    StringBuffer strOutputPath;
+    StringBuffer strEnvFilePath;
+    bool bGenerateHostGroup = false;
+    bool bGenerateServiceAndHost   = false;
+
+    while (i < argc)
     {
-        std::cout << "Help";
-    }
-    else if (stricmp(argv[1], "-o") == 0 || stricmp(argv[1], "-host") == 0)
-    {
-        if (argc == 4)
+        if (argc == 1 || stricmp(argv[i],"-h") == 0 || stricmp(argv[i],"-help") == 0)
         {
-            CHPCCNagiosToolSet::generateHostGroupsFile(const_cast<const char*>(argv[2]), const_cast<const char*>(argv[3]));
+            usage();
+            return 0;
         }
-        else
+        else if (stricmp(argv[i], "-c") == 0 || stricmp(argv[i], "-cfggen") == 0)
         {
-            StringBuffer strOutput;
-            CHPCCNagiosToolSet::generateHostGroupsFile(strOutput);
+            i++;
+            strConfigGenPath.set(argv[i]);
         }
-    }
-    else if (stricmp(argv[1], "-s") == 0 || stricmp(argv[1], "-service") == 0)
-    {
-        if (argc == 4)
+        else if (stricmp(argv[i], "-g") == 0 || stricmp(argv[i], "-hostgroup") == 0)
         {
-            CHPCCNagiosToolSet::generateServiceDefinitionFile(const_cast<const char*>(argv[3]), const_cast<const char*>(argv[2]));//, const_cast<const char*>(argv[3]));
+            bGenerateHostGroup = true;
         }
-        else
+        else if (stricmp(argv[i], "-s") == 0 || stricmp(argv[i], "-service") == 0)
         {
-            StringBuffer strOutput;
-            CHPCCNagiosToolSet::generateServiceDefinitionFile(strOutput);
+            bGenerateServiceAndHost = true;
+        }
+        else if (stricmp(argv[i], "-o") == 0 || stricmp(argv[i], "-output") == 0)
+        {
+            i++;
+            strOutputPath.set(argv[i]);
+        }
+        else if (stricmp(argv[i], "-e") == 0 || stricmp(argv[i], "-env") == 0)
+        {
+            i++;
+            strEnvFilePath.set(argv[i]);
         }
 
+
+        i++;
     }
 
+    /*if (strEnvFilePath.length() == 0)
+    {
+        std::cout << "Missing environment file path! (-env)\n";
+        return 0;
+    }
+    else*/ if (strOutputPath.length() == 0)
+    {
+        std::cout << "Missing output file path! (-output)\n";
+        return 0;
+    }
+    else if (bGenerateServiceAndHost == true && bGenerateHostGroup == true)
+    {
+        std::cout << "Can only generate 1 type of config per invocation! (-hostgroup xor -service)\n";
+        return 0;
+    }
+    else if (bGenerateServiceAndHost == false && bGenerateHostGroup == false)
+    {
+        std::cout << "Nothing to generate! (-hostgroup xor -service)\n";
+        return 0;
+    }
+    else if (bGenerateHostGroup == true)
+    {
+        std::cout << "Generating hostgroup --> " << strOutputPath.str();
+        if (CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(strOutputPath.str(), strEnvFilePath.length() == 0 ? NULL : strEnvFilePath.str()) == false, strConfigGenPath.length() == 0 ? NULL : strConfigGenPath.str())
+        {
+            std::cout << "\nError generating configuration!. Verify input.\n";
+            return 0;
+        }
+    }
+    else if (bGenerateServiceAndHost == true)
+    {
+        std::cout << "Generating service and host config --> " << strOutputPath.str();
+
+        if (CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(strOutputPath.str(), strEnvFilePath.length() == 0 ? NULL : strEnvFilePath.str()) == false, strConfigGenPath.length() == 0 ? NULL : strConfigGenPath.str())
+        {
+            std::cout << "\nError generating configuration!. Verify input.\n";
+            return 0;
+        }
+    }
+
+    std::cout << "\nDone!\n";
     return 0;
 }

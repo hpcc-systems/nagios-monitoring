@@ -6,9 +6,20 @@
 #include "HPCCNagiosToolSetCommon.hpp"
 #include <cstring>
 
-bool CHPCCNagiosToolSet::generateHostGroupsFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
 {
-    if (pOutputFilePath == NULL || *pOutputFilePath == 0 || pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
+
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
+    {
+        pConfigGenPath = PCONFIGGEN_PATH;
+    }
+
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
+
+    if (pOutputFilePath == NULL || *pOutputFilePath == 0 || checkFileExists(pConfigGenPath) == false)
     {
         return false;
     }
@@ -18,26 +29,7 @@ bool CHPCCNagiosToolSet::generateHostGroupsFile(const char* pOutputFilePath, con
 
     strConfiggenCmdLine.append(PCONFIGGEN_PARAM_LIST_ALL).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
 
-    FILE *fp = popen(strConfiggenCmdLine.str(), "r");
-
-    if (fp == NULL)
-    {
-        return false;
-    }
-
-    int nCharacter = -1;
-    CFileInputStream cfgInputStream(fileno(fp));
-
-    memBuff.clear();
-
-    do
-    {
-        nCharacter = cfgInputStream.readNext();
-        memBuff.append(static_cast<unsigned char>(nCharacter));
-    }
-    while(nCharacter != -1);
-
-    memBuff.append('\0');
+    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine.str(), memBuff);
 
     OwnedIFile outputFile = createIFile(pOutputFilePath);
     OwnedIFileIO io = outputFile->open(IFOcreaterw);
@@ -156,9 +148,19 @@ bool CHPCCNagiosToolSet::generateHostGroupsFile(const char* pOutputFilePath, con
     return true;
 }
 
-bool CHPCCNagiosToolSet::generateHostConfigurationsFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
 {
-    if (pOutputFilePath == NULL || *pOutputFilePath == 0 || pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
+    {
+        pConfigGenPath = PCONFIGGEN_PATH;
+    }
+
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
+
+    if (pOutputFilePath == NULL || *pOutputFilePath == 0 || checkFileExists(pConfigGenPath) == false)
     {
         return false;
     }
@@ -168,34 +170,7 @@ bool CHPCCNagiosToolSet::generateHostConfigurationsFile(const char* pOutputFileP
 
     strConfiggenCmdLine.append(PCONFIGGEN_PARAM_LIST_ALL).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
 
-    FILE *fp = popen(strConfiggenCmdLine.str(), "r");
-
-    if (fp == NULL)
-    {
-        return false;
-    }
-
-    int nCharacter = -1;
-    CFileInputStream cfgInputStream(fileno(fp));
-
-    memBuff.clear();
-
-    do
-    {
-        nCharacter = cfgInputStream.readNext();
-        memBuff.append(static_cast<unsigned char>(nCharacter));
-    }
-    while(nCharacter != -1);
-
-    memBuff.append('\0');
-
-    OwnedIFile outputFile = createIFile(pOutputFilePath);
-    OwnedIFileIO io = outputFile->open(IFOcreaterw);
-
-    if (io == NULL)
-    {
-        return false;
-    }
+    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine, memBuff);
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
@@ -205,6 +180,14 @@ bool CHPCCNagiosToolSet::generateHostConfigurationsFile(const char* pOutputFileP
     int nCount = 0;
     char pProcess[1024] = "";
 
+    OwnedIFile outputFile = createIFile(pOutputFilePath);
+    OwnedIFileIO io = outputFile->open(IFOcreaterw);
+
+    if (io == NULL)
+    {
+        return false;
+    }
+
     MapIPtoNode mapIPtoHostName;
 
     StringBuffer strServiceConfig;
@@ -213,7 +196,6 @@ bool CHPCCNagiosToolSet::generateHostConfigurationsFile(const char* pOutputFileP
 
     int i = -1;
     char *pch = NULL;
-    bool bAdd = false;
     pch = strtok(pOutput, ",\n");
 
     while (pch != NULL)
@@ -223,31 +205,25 @@ bool CHPCCNagiosToolSet::generateHostConfigurationsFile(const char* pOutputFileP
             if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
             {
                 strncpy(pProcess, pch, sizeof(pProcess));
-                bAdd = true;
                 i = 0;
             }
             else if (pProcess == NULL || *pProcess == 0 || strcmp(pProcess, pch) != 0)
             {
                 strncpy(pProcess, pch, sizeof(pProcess));
-                bAdd = true;
                 i++;
             }
             else if (strcmp(pProcess,pch) == 0)
             {
                 i++;
-                bAdd = false;
             }
         }
         else if (nCount % 6 == 2) // IP address
         {
-            if (bAdd == true)
-            {
-                strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).append("")\
-                        .append(P_NAGIOS_SERVICE_CONFIG_3).append("COMMAND_TO_DO").append(P_NAGIOS_SERVICE_CONFIG_4).append(pch).append(P_NAGIOS_SERVICE_CONFIG_5);
 
-                strServiceConfig.append("\n");
-                bAdd = false;
-            }
+            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
+                    .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SERVICE_CONFIG_4).append(pch).append(P_NAGIOS_SERVICE_CONFIG_5);
+
+            strServiceConfig.append("\n");
         }
 
         pch = strtok(NULL, ",\n");
@@ -303,7 +279,6 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, M
     char *pOutput = strdup(strOutput.str());
 
     int nCount = 0;
-    char pIP[1024] = "";
 
     char *pch = NULL;
     pch = strtok(pOutput, ",\n");
@@ -354,7 +329,66 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, M
     return true;
 }
 
-bool CHPCCNagiosToolSet::generateServiceDefinitionFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath )
+bool CHPCCNagiosToolSet::generateServicesConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath )
 {
+
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
+    {
+        pConfigGenPath = PCONFIGGEN_PATH;
+    }
+
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
+
+    if (pOutputFilePath == NULL || *pOutputFilePath == 0 || checkFileExists(pConfigGenPath) == false)
+    {
+        return false;
+    }
+
+    MemoryBuffer memBuff;
+    StringBuffer strConfiggenCmdLine(pConfigGenPath);
+
+    strConfiggenCmdLine.append(PCONFIGGEN_PARAM_LIST_ALL).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+
+    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine, memBuff);
+
+    return true;
+}
+
+bool CHPCCNagiosToolSet::getConfiggenOutput(const char* pEnvXML, const char* pConfigGenPath, const char* pCommandLine, MemoryBuffer &memBuff)
+{
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
+    {
+        pConfigGenPath = PCONFIGGEN_PATH;
+    }
+
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
+
+    FILE *fp = popen(pCommandLine, "r");
+
+    if (fp == NULL)
+    {
+        return false;
+    }
+
+    int nCharacter = -1;
+    CFileInputStream cfgInputStream(fileno(fp));
+
+    memBuff.clear();
+
+    do
+    {
+        nCharacter = cfgInputStream.readNext();
+        memBuff.append(static_cast<unsigned char>(nCharacter));
+    }
+    while(nCharacter != -1);
+
+    memBuff.append('\0');
+
     return true;
 }
