@@ -5,10 +5,10 @@
 #include "HPCCNagiosToolSet.hpp"
 #include "HPCCNagiosToolSetCommon.hpp"
 #include <cstring>
+#include "XMLTags.h"
 
 bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
 {
-
     if (pConfigGenPath == NULL || *pConfigGenPath == 0)
     {
         pConfigGenPath = PCONFIGGEN_PATH;
@@ -202,7 +202,11 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
     {
         if (nCount % 6 ==  0) // Process name
         {
-            if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
+            if (*pch != 0 && strcmp(pch,XML_TAG_ESPPROCESS) == 0)
+            {
+                continue;
+            }
+            else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
             {
                 strncpy(pProcess, pch, sizeof(pProcess));
                 i = 0;
@@ -221,7 +225,7 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
         {
 
             strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
-                    .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SERVICE_CONFIG_4).append(pch).append(P_NAGIOS_SERVICE_CONFIG_5);
+                    .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SERVICE_CONFIG_4).append("<TODO: PARAMS>").append(P_NAGIOS_SERVICE_CONFIG_5);
 
             strServiceConfig.append("\n");
         }
@@ -230,6 +234,8 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
 
         nCount++;
     }
+
+    CHPCCNagiosToolSet::generateNagiosEspServiceConfig(strServiceConfig, pEnvXML, pConfigGenPath);
 
     io->write(0, strServiceConfig.length(), strServiceConfig.str());
     io->close();
@@ -326,6 +332,8 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, M
         nCount++;
     }
 
+    delete pOutput;
+
     return true;
 }
 
@@ -355,6 +363,14 @@ bool CHPCCNagiosToolSet::generateServicesConfigurationFile(const char* pOutputFi
     CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine, memBuff);
 
     return true;
+}
+
+bool CHPCCNagiosToolSet::generateServicePluginConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
+{
+    OwnedIFile outputFile = createIFile(pOutputFilePath);
+    OwnedIFileIO io = outputFile->open(IFOcreaterw);
+
+
 }
 
 bool CHPCCNagiosToolSet::getConfiggenOutput(const char* pEnvXML, const char* pConfigGenPath, const char* pCommandLine, MemoryBuffer &memBuff)
@@ -391,4 +407,109 @@ bool CHPCCNagiosToolSet::getConfiggenOutput(const char* pEnvXML, const char* pCo
     memBuff.append('\0');
 
     return true;
+}
+
+bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strServiceConfig, const char* pEnvXML, const char* pConfigGenPath)
+{
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
+    {
+        pConfigGenPath = PCONFIGGEN_PATH;
+    }
+
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
+
+    if (checkFileExists(pConfigGenPath) == false)
+    {
+        return false;
+    }
+
+    MemoryBuffer memBuff;
+    StringBuffer strConfiggenCmdLine(pConfigGenPath);
+
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ESP_SERVICES).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+
+    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine.str(), memBuff);
+
+    OwnedIFile outputFile = createIFile(pOutputFilePath);
+    OwnedIFileIO io = outputFile->open(IFOcreaterw);
+
+    if (io == NULL)
+    {
+        return false;
+    }
+
+    StringBuffer strOutput(memBuff.toByteArray());
+    strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
+    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+    char *pOutput = strdup(strOutput.str());
+
+    int i = -1;
+    char *pch = NULL;
+    pch = strtok(pOutput, ",\n");
+
+    while (pch != NULL)
+    {
+        StringBuffer strPort;
+        StringBuffer strIPAddress;
+
+        if (nCount % 7 ==  0) // Process name
+        {
+            if (*pch != 0 && strcmp(pch, XML_TAG_ESPPROCESS) != 0)
+            {
+                return;  // expecting only EspProcess
+            }
+            else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                i = 0;
+            }
+            else if (pProcess == NULL || *pProcess == 0 || strcmp(pProcess, pch) != 0)
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                i++;
+            }
+            else if (strcmp(pProcess,pch) == 0)
+            {
+                i++;
+            }
+        }
+        else if (nCount % 7 == 4) // IP Address
+        {
+
+            strIPAddress.clear().append(pch);
+        }
+        else if (nCount % 7 == 5) // IP Port
+        {
+            strPort.clear().append(pch);
+        }
+        else if (nCount % 7 == 6) // protocol
+        {
+            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
+                    .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SERVICE_CONFIG_4).append("<TODO: PARAMS>").append(P_NAGIOS_SERVICE_CONFIG_5);
+
+            strServiceConfig.append("\n");
+        }
+
+        pch = strtok(NULL, ",\n");
+
+        nCount++;
+    }
+
+
+    delete pOutput;
+
+    return true;
+}
+
+void CHPCCNagiosToolSet::getHostName(StringBuffer &strHostName, const char *pIP, MapIPtoNode &mapIPtoHostName)
+{
+    if (pIP == NULL || *pIP == 0)
+    {
+        return;
+    }
+
+
 }
