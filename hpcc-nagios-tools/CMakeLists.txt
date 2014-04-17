@@ -33,6 +33,7 @@ include_directories (
         ${HPCC_SOURCE_DIR}/common
         ${HPCC_SOURCE_DIR}/system/jlib
         ${HPCC_SOURCE_DIR}/system/include
+        ${HPCC_SOURCE_DIR}/deployment/deploy
         ${CMAKE_BINARY_DIR}
         ${CMAKE_BINARY_DIR}/oss
     )

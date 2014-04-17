@@ -27,7 +27,7 @@ bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutput
     MemoryBuffer memBuff;
     StringBuffer strConfiggenCmdLine(pConfigGenPath);
 
-    strConfiggenCmdLine.append(PCONFIGGEN_PARAM_LIST_ALL).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ALL).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
 
     CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine.str(), memBuff);
 
@@ -168,7 +168,7 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
     MemoryBuffer memBuff;
     StringBuffer strConfiggenCmdLine(pConfigGenPath);
 
-    strConfiggenCmdLine.append(PCONFIGGEN_PARAM_LIST_ALL).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ALL).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
 
     CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine, memBuff);
 
@@ -204,7 +204,7 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
         {
             if (*pch != 0 && strcmp(pch,XML_TAG_ESPPROCESS) == 0)
             {
-                continue;
+                i++;
             }
             else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
             {
@@ -253,7 +253,7 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, M
     MemoryBuffer memBuff;
     StringBuffer strConfiggenCmdLine(pConfigGenPath);
 
-    strConfiggenCmdLine.append(PCONFIGGEN_PARAM_MACHINES).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_MACHINES).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
 
     FILE *fp = popen(strConfiggenCmdLine.str(), "r");
 
@@ -308,7 +308,7 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, M
             if (hp == NULL)
             {
                 bDoLookUp = false;
-                strcpy(pHostName, "Server");
+                strcpy(pHostName, pch);
             }
             else
             {
@@ -358,7 +358,7 @@ bool CHPCCNagiosToolSet::generateServicesConfigurationFile(const char* pOutputFi
     MemoryBuffer memBuff;
     StringBuffer strConfiggenCmdLine(pConfigGenPath);
 
-    strConfiggenCmdLine.append(PCONFIGGEN_PARAM_LIST_ALL).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ALL).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
 
     CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine, memBuff);
 
@@ -429,17 +429,17 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
     MemoryBuffer memBuff;
     StringBuffer strConfiggenCmdLine(pConfigGenPath);
 
-    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ESP_SERVICES).append(PCONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ESP_SERVICES).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
 
     CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine.str(), memBuff);
 
-    OwnedIFile outputFile = createIFile(pOutputFilePath);
-    OwnedIFileIO io = outputFile->open(IFOcreaterw);
+    //OwnedIFile outputFile = createIFile(pOutputFilePath);
+    //OwnedIFileIO io = outputFile->open(IFOcreaterw);
 
-    if (io == NULL)
-    {
-        return false;
-    }
+    //if (io == NULL)
+    //{
+//        return false;
+//    }
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
@@ -447,19 +447,23 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
     char *pOutput = strdup(strOutput.str());
 
     int i = -1;
+    char pProcess[1024] = "";
+    int nCount = 0;
     char *pch = NULL;
     pch = strtok(pOutput, ",\n");
+    StringBuffer strPort;
+    StringBuffer strIPAddress;
+    char pHostName[1024] = "";
+    char pServiceName[1024] = "";
 
     while (pch != NULL)
     {
-        StringBuffer strPort;
-        StringBuffer strIPAddress;
-
         if (nCount % 7 ==  0) // Process name
         {
             if (*pch != 0 && strcmp(pch, XML_TAG_ESPPROCESS) != 0)
             {
-                return;  // expecting only EspProcess
+                delete pOutput;
+                return false;  // expecting only EspProcess
             }
             else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
             {
@@ -476,10 +480,32 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
                 i++;
             }
         }
+        else if (nCount % 7 == 3) // service name
+        {
+            strcpy(pServiceName,pch);
+        }
         else if (nCount % 7 == 4) // IP Address
         {
-
             strIPAddress.clear().append(pch);
+
+            struct hostent* hp = NULL;
+            static bool bDoLookUp = true;
+
+            if (bDoLookUp == true)
+            {
+                unsigned int addr = inet_addr(pch);
+                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
+            }
+
+            if (hp == NULL)
+            {
+                bDoLookUp = false;
+                strcpy(pHostName, pch);
+            }
+            else
+            {
+                strcpy(pHostName,hp->h_name);
+            }
         }
         else if (nCount % 7 == 5) // IP Port
         {
@@ -487,8 +513,9 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
         }
         else if (nCount % 7 == 6) // protocol
         {
-            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
-                    .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SERVICE_CONFIG_4).append("<TODO: PARAMS>").append(P_NAGIOS_SERVICE_CONFIG_5);
+            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pServiceName)\
+                    .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_ESP_SERVICE).append( strcmp(pch,P_HTTP) == 0 ? P_HTTP : P_HTTPS).append(P_NAGIOS_SERVICE_CONFIG_4)\
+                    .append(strPort.str()).append(P_NAGIOS_SERVICE_CONFIG_5);
 
             strServiceConfig.append("\n");
         }
