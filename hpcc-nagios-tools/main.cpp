@@ -26,6 +26,12 @@ int main(int argc, char *argv[])
     bool bGenerateServiceAndHost   = false;
     bool bGeneratePluginConfig = false;
 
+    if (argc == 1)
+    {
+        usage();
+        return 0;
+    }
+
     while (i < argc)
     {
         if (argc == 1 || stricmp(argv[i],"-h") == 0 || stricmp(argv[i],"-help") == 0)
@@ -101,6 +107,7 @@ int main(int argc, char *argv[])
     else if (bGenerateServiceAndHost == true)
     {
         std::cout << "Generating service and host config --> " << strOutputPath.str();
+        std::flush(std::cout);
 
         if (CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(strOutputPath.str(), strEnvFilePath.length() == 0 ? NULL : strEnvFilePath.str()) == false, strConfigGenPath.length() == 0 ? NULL : strConfigGenPath.str())
         {

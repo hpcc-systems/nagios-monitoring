@@ -7,6 +7,63 @@
 #include <cstring>
 #include "XMLTags.h"
 
+class CHPCCNagiosHostEventForSSH : public CHPCCNagiosHostEvent
+{
+public:
+    CHPCCNagiosHostEventForSSH(StringBuffer *pStrBuffer) : CHPCCNagiosHostEvent(pStrBuffer)
+    {
+    }
+    virtual void onHostEvent(const char *pHostName, int idx, const char *pToken)
+    {
+        if (pHostName == NULL || *pHostName == 0)
+        {
+            return;
+        }
+        else
+        {
+            m_pStrBuffer->append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).append("check for ssh connectivity")\
+                    .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_SSH_SERVICE).append(P_NAGIOS_SERVICE_CONFIG_4)
+                    .append(CHPCCNagiosHostEventForSSH::m_nTimeOut).append(P_NAGIOS_SERVICE_CONFIG_5);
+
+            m_pStrBuffer->append("\n");
+        }
+    }
+    static const int m_nTimeOut;
+
+protected:
+
+    CHPCCNagiosHostEventForSSH()
+    {
+    }
+};
+
+const int CHPCCNagiosHostEventForSSH::m_nTimeOut = 10;
+
+class CHPCCNagiosHostEventHostConfig : public CHPCCNagiosHostEvent
+{
+public:
+    CHPCCNagiosHostEventHostConfig(StringBuffer *pStrBuffer) : CHPCCNagiosHostEvent(pStrBuffer)
+    {
+    }
+    virtual void onHostEvent(const char *pHostName, int idx, const char *pToken)
+    {
+        if (pHostName == NULL || *pHostName == 0)
+        {
+            return;
+        }
+        else
+        {
+            m_pStrBuffer->append(P_NAGIOS_HOST_CONFIG_1).append(pHostName).append(P_NAGIOS_HOST_CONFIG_2).append(pHostName).append(" ")\
+                    .append(idx).append(P_NAGIOS_HOST_CONFIG_3).append(pToken).append(P_NAGIOS_HOST_CONFIG_4);
+            m_pStrBuffer->append("\n");
+        }
+    }
+protected:
+    CHPCCNagiosHostEventHostConfig()
+    {
+    }
+};
+
 bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
 {
     if (pConfigGenPath == NULL || *pConfigGenPath == 0)
@@ -192,7 +249,8 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
 
     StringBuffer strServiceConfig;
 
-    CHPCCNagiosToolSet::generateNagiosHostConfig(strServiceConfig, mapIPtoHostName, pEnvXML);
+    CHPCCNagiosHostEventHostConfig evHost(&strServiceConfig);
+    CHPCCNagiosToolSet::generateNagiosHostConfig(evHost, mapIPtoHostName, pEnvXML, pConfigGenPath);
 
     int i = -1;
     char *pch = NULL;
@@ -223,7 +281,6 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
         }
         else if (nCount % 6 == 2) // IP address
         {
-
             strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
                     .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SERVICE_CONFIG_4).append("<TODO: PARAMS>").append(P_NAGIOS_SERVICE_CONFIG_5);
 
@@ -237,13 +294,17 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
 
     CHPCCNagiosToolSet::generateNagiosEspServiceConfig(strServiceConfig, pEnvXML, pConfigGenPath);
 
+    CHPCCNagiosHostEventForSSH event(&strServiceConfig);
+    MapIPtoNode map;
+    CHPCCNagiosToolSet::generateNagiosHostConfig(event,map, pEnvXML, pConfigGenPath);
+
     io->write(0, strServiceConfig.length(), strServiceConfig.str());
     io->close();
 
     delete pOutput;
 }
 
-bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, MapIPtoNode &mapIPtoHostName, const char* pEnvXML, const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateNagiosHostConfig(CHPCCNagiosHostEvent &evHost, MapIPtoNode &mapIPtoHostName, const char* pEnvXML, const char* pConfigGenPath)
 {
     if (pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
     {
@@ -315,12 +376,11 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(StringBuffer &strHostConfig, M
                 strcpy(pHostName,hp->h_name);
             }
 
-            strHostConfig.append(P_NAGIOS_HOST_CONFIG_1).append(pHostName).append(i).append(P_NAGIOS_HOST_CONFIG_2).append(pHostName).append(" ")\
-                                                                    .append(i).append(P_NAGIOS_HOST_CONFIG_3).append(pch).append(P_NAGIOS_HOST_CONFIG_4);
-            strHostConfig.append("\n");
+            evHost.onHostEvent(pHostName, i,pch);
 
             struct NodeName nm;
-            nm.strHostName.setf("%s%d",pHostName, i);
+
+            nm.strHostName.set(pHostName);
             nm.strHostAlias.setf("%s %d", pHostName, i);
             mapIPtoHostName.setValue(pch, nm);
 
@@ -529,6 +589,11 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
     delete pOutput;
 
     return true;
+}
+
+bool CHPCCNagiosToolSet::generateNagiosSSHCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML, const char* pConfigGenPath)
+{
+
 }
 
 void CHPCCNagiosToolSet::getHostName(StringBuffer &strHostName, const char *pIP, MapIPtoNode &mapIPtoHostName)

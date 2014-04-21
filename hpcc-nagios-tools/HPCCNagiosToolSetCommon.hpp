@@ -13,6 +13,7 @@ static const char *P_CONFIGGEN_PARAM_ENVIRONMENT(" -env ");
 static const char *P_CONFIGGEN_PARAM_MACHINES(" -machines ");
 static const char *P_CONFIGGEN_PARAM_LIST_ESP_SERVICES(" -listespservices ");
 static const char *P_CHECK_ESP_SERVICE("check_esp_service_");
+static const char *P_CHECK_SSH_SERVICE("check_ssh_hpcc_machine");
 static const char *P_HTTP("http");
 static const char *P_HTTPS("https");
 
