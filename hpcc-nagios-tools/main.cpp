@@ -1,7 +1,6 @@
 #include "HPCCNagiosToolSet.hpp"
 #include "jstring.hpp"
 #include <iostream>
-#include "jstring.hpp"
 
 void usage()
 {

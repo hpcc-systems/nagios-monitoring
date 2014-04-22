@@ -4,6 +4,8 @@
 #include "jstring.hpp"
 #include "jhash.hpp"
 
+static const int   P_DALI_CHECK_TIMEOUT(5*1000);
+
 static const char *P_CHECK_NRPE_1_ARG("check_nrpe_1_arg!");
 static const char *P_CHECK_NRPE_2_ARG("check_nrpe_2_arg!");
 
@@ -14,8 +16,10 @@ static const char *P_CONFIGGEN_PARAM_MACHINES(" -machines ");
 static const char *P_CONFIGGEN_PARAM_LIST_ESP_SERVICES(" -listespservices ");
 static const char *P_CHECK_ESP_SERVICE("check_esp_service_");
 static const char *P_CHECK_SSH_SERVICE("check_ssh_hpcc_machine");
+static const char *P_CHECK_DALI("check_dali");
 static const char *P_HTTP("http");
 static const char *P_HTTPS("https");
+static const char *P_BY_TYPE(" -t ");
 
 struct NodeName
 {
@@ -59,7 +63,7 @@ static const char *P_NAGIOS_SERVICE_CONFIG_2("\n\
     service_description  ");
 static const char *P_NAGIOS_SERVICE_CONFIG_3("\n\
     check_command        ");
-static const char *P_NAGIOS_SERVICE_CONFIG_4("!");  // NOT SURE IF THIS IS USEFUL
+static const char *P_NAGIOS_SEPERATOR("!");  // NOT SURE IF THIS IS USEFUL
 static const char *P_NAGIOS_SERVICE_CONFIG_5("\n\
 }\n");
 
