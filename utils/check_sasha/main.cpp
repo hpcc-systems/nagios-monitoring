@@ -1,9 +1,10 @@
-#include "daclient.hpp"
-#include "jsocket.hpp"
-#include "jstring.hpp"
-#include "mpbase.hpp"
-#include "jlog.hpp"
 #include <iostream>
+#include "build-config.h"
+#include "jlib.hpp"
+#include "jsocket.hpp"
+#include "sacmd.hpp"
+#include "mpbase.hpp"
+#include "mpcomm.hpp"
 
 const int nOKRetValue = 0;
 const int nCriticalRetValue = 2;
@@ -11,14 +12,16 @@ const int nDefaultTimeOut=30 * 1000;
 
 void usage()
 {
-    std::cout << "HPCC Systems Nagios Check for Dali\nUsage: check_dali <dali IP> <Port> [Timeout default = " << nDefaultTimeOut << "]\n";
+    std::cout << "HPCC Systems Nagios Check for Dali\nUsage: check_sasha <sasha> <Port> [Timeout default = " << nDefaultTimeOut << "]\n";
 }
 
 int critical(const char* pIP, const char* pPort)
 {
     StringBuffer strMsg;
-    strMsg.setf("CRITICAL - Can not connect to dali %s:%s\n", pIP, pPort);
+    strMsg.setf("CRITICAL - Can not connect to sasha %s:%s\n", pIP, pPort);
     std::cout << strMsg.str();
+
+    stopMPServer();
 
     return nCriticalRetValue;
 }
@@ -28,6 +31,7 @@ int ok()
     std::cout << "OK\n";
     return nOKRetValue;
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -41,27 +45,17 @@ int main(int argc, char* argv[])
 
     int nTimeOut = (argc == 4 ? atoi(argv[3]) : nDefaultTimeOut);
 
+    startMPServer(0);
+    Owned<ISashaCommand> cmd = createSashaCommand();
+    cmd->setAction(SCA_null);
+
+
     SocketEndpoint ep(argv[1], atoi(argv[2]));
-    SocketEndpointArray epa;
-
-    epa.append(ep);
-
-    IGroup *group = createIGroup(epa);
+    Owned<INode> node = createINode(ep);
 
     try
     {
-        initClientProcess(group, DCR_Other, 0, 0, 0, nTimeOut);
-    }
-    catch(IException *)
-    {
-        return critical(argv[1], argv[2]);
-    }
-
-    try
-    {
-        Owned<IRemoteConnection> conn = querySDS().connect("./", myProcessSession(), RTM_LOCK_READ, nTimeOut);
-
-        if (conn == NULL)
+        if (cmd->send(node, nTimeOut) == false)
         {
             return critical(argv[1], argv[2]);
         }
@@ -70,10 +64,12 @@ int main(int argc, char* argv[])
             return ok();
         }
     }
-    catch (IException *)
+
+    catch (...)
     {
         return critical(argv[1], argv[2]);
     }
 
+    stopMPServer();
     return 0;
 }

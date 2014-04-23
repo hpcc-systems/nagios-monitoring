@@ -29,16 +29,16 @@ IF ("${HPCC_SOURCE_DIR}" STREQUAL "")
   SET (HPCC_SOURCE_DIR ${HPCC_SOURCE_ROOT_DIR}/HPCC-Platform)
 ENDIF()
 
-MESSAGE ( "32 - CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
+#MESSAGE ( "32 - CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
 
 
 include (${HPCC_NM_SOURCE_DIR}/version.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/optionDefaults.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/nmCommonSetup.cmake)
+#include (${HPCC_SOURCE_DIR}/cmake_modules/commonSetup.cmake)
 include (${HPCC_SOURCE_DIR}/version.cmake)
 
-MESSAGE ( "40 - CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
-
+#MESSAGE ( "40 - CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
 
 MESSAGE ( "CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
 
@@ -47,6 +47,30 @@ SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti -fPIC -fmessage-length=0 -Wforma
 MESSAGE("*** START BUILDING HPCC PLATFORM ***")
 MESSAGE (HPCC_SOURCE_DIR: ${HPCC_SOURCE_DIR})
 ADD_SUBDIRECTORY(${HPCC_SOURCE_DIR} oss EXCLUDE_FROM_ALL)
+
+###
+## Run file configuration to set build tag along with install lines for generated
+## config files.
+###
+set( BUILD_TAG "${projname}_${version}-${stagever}")
+if (USE_GIT_DESCRIBE OR CHECK_GIT_TAG)
+    FETCH_GIT_TAG (${CMAKE_SOURCE_DIR} ${projname}_${version} GIT_BUILD_TAG)
+    message ("-- Git tag is '${GIT_BUILD_TAG}'")
+    if (NOT "${GIT_BUILD_TAG}" STREQUAL "${BUILD_TAG}")
+        if (CHECK_GIT_TAG)
+            message(FATAL_ERROR "Git tag '${GIT_BUILD_TAG}' does not match source version '${BUILD_TAG}'" )
+        else()
+            if(NOT "${GIT_BUILD_TAG}" STREQUAL "") # probably means being built from a tarball...
+                set( BUILD_TAG "${BUILD_TAG}[${GIT_BUILD_TAG}]")
+            endif()
+        endif()
+    endif()
+endif()
+message ("-- Build tag is '${BUILD_TAG}'")
+if (NOT "${BASE_BUILD_TAG}" STREQUAL "")
+    set(BASE_BUILD_TAG "${BUILD_TAG}")
+endif()
+message ("-- Base build tag is '${BASE_BUILD_TAG}'")
 CONFIGURE_FILE(${HPCC_SOURCE_DIR}/build-config.h.cmake "build-config.h" )
 MESSAGE("*** END BUILDING HPCC PLATFORM ***")
 

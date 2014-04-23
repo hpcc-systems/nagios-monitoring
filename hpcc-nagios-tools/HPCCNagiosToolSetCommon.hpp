@@ -4,7 +4,9 @@
 #include "jstring.hpp"
 #include "jhash.hpp"
 
-static const int   P_DALI_CHECK_TIMEOUT(5*1000);
+static const int   DEFAULT_TIMEOUT(5*1000);
+static const int   DALI_CHECK_TIMEOUT(DEFAULT_TIMEOUT);
+static const int   SASHA_CHECK_TIMEOUT(DEFAULT_TIMEOUT);
 
 static const char *P_CHECK_NRPE_1_ARG("check_nrpe_1_arg!");
 static const char *P_CHECK_NRPE_2_ARG("check_nrpe_2_arg!");
@@ -17,6 +19,7 @@ static const char *P_CONFIGGEN_PARAM_LIST_ESP_SERVICES(" -listespservices ");
 static const char *P_CHECK_ESP_SERVICE("check_esp_service_");
 static const char *P_CHECK_SSH_SERVICE("check_ssh_hpcc_machine");
 static const char *P_CHECK_DALI("check_dali");
+static const char *P_CHECK_SASHA("check_sasha");
 static const char *P_HTTP("http");
 static const char *P_HTTPS("https");
 static const char *P_BY_TYPE(" -t ");

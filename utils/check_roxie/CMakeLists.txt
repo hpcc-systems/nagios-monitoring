@@ -13,6 +13,11 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 ################################################################################
-HPCC_ADD_SUBDIRECTORY(check_dali)
-HPCC_ADD_SUBDIRECTORY(check_roxie)
-HPCC_ADD_SUBDIRECTORY(check_sasha)
+
+
+# Component: check_roxie
+#####################################################
+# Description:
+# ------------
+#    Cmake check_roxie
+#####################################################

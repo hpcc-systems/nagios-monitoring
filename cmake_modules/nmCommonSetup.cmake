@@ -71,6 +71,8 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
   option(DOCS_MOBI "Create Mobi Docs" OFF)
   option(USE_RESOURCE "Use resource download in ECLWatch" OFF)
   option(GENERATE_COVERAGE_INFO "Generate coverage info for gcov" OFF)
+  option(USE_SIGNED_CHAR "Build system with default char type is signed" OFF)
+  option(USE_UNSIGNED_CHAR "Build system with default char type is unsigned" OFF)
 
   option(USE_PYTHON "Enable Python support" OFF)
   option(USE_V8 "Enable V8 JavaScript support" OFF)
