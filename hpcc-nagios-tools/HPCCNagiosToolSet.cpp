@@ -8,7 +8,7 @@
 #include "XMLTags.h"
 
 const char *P_DALI("dali");
-const char *P_SASHA("dali");
+const char *P_SASHA("sasha");
 static bool bDoLookUp = true;
 
 class CHPCCNagiosHostEventForSSH : public CHPCCNagiosHostEvent

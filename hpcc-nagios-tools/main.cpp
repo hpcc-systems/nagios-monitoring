@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         {
             bGenerateServiceAndHost = true;
         }
-        else if (stricmp(argv[i], "-o") == 0 || stricmp(argv[i], "-output") == 0)
+        else if (stricmp(argv[i], "-o") == 0 || stricmp(argv[i], "-output") == 0 || stricmp(argv[i], "-out") == 0)
         {
             i++;
             strOutputPath.set(argv[i]);
@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
     else if (bGenerateHostGroup == true)
     {
         std::cout << "Generating hostgroup --> " << strOutputPath.str();
+        std::flush(std::cout);
+
         if (CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(strOutputPath.str(), strEnvFilePath.length() == 0 ? NULL : strEnvFilePath.str()) == false, strConfigGenPath.length() == 0 ? NULL : strConfigGenPath.str())
         {
             std::cout << "\nError generating configuration!. Verify input.\n";
@@ -96,6 +98,7 @@ int main(int argc, char *argv[])
     else if (bGeneratePluginConfig == true)
     {
         std::cout << "Generating plugin config --> " << strOutputPath.str();
+        std::flush(std::cout);
 
         if (CHPCCNagiosToolSet::generateServicePluginConfigurationFile(strOutputPath.str(), strEnvFilePath.length() == 0 ? NULL : strEnvFilePath.str()) == false, strConfigGenPath.length() == 0 ? NULL : strConfigGenPath.str())
         {
