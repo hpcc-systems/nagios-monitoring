@@ -41,7 +41,7 @@ include_directories (
 ADD_DEFINITIONS( -D_CONSOLE )
 
 HPCC_ADD_EXECUTABLE( check_dali ${SRCS} )
-#install ( TARGETS hpcc-nagios-tools RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )
+install ( TARGETS check_dali RUNTIME DESTINATION /usr/lib/nagios/plugins/ )
 target_link_libraries ( check_dali
          jlib
          dalibase

@@ -9,6 +9,7 @@
 
 const char *P_DALI("dali");
 const char *P_SASHA("sasha");
+const char *P_ROXIE("roxie");
 static bool bDoLookUp = true;
 
 class CHPCCNagiosHostEventForSSH : public CHPCCNagiosHostEvent
@@ -284,13 +285,14 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
                 i++;
             }
         }
-        else if (nCount % nNumValues == 2) // IP address
+        /*else if (nCount % nNumValues == 2) // IP address
         {
-            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
+            //TODO: Default check?
+            /*strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
                     .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SEPERATOR).append("<TODO: PARAMS>").append(P_NAGIOS_SERVICE_CONFIG_5);
 
             strServiceConfig.append("\n");
-        }
+        }*/
 
         pch = strtok(NULL, ",\n");
 
@@ -300,6 +302,7 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
     CHPCCNagiosToolSet::generateNagiosEspServiceConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosDaliCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
+    CHPCCNagiosToolSet::generateNagiosRoxieCeckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
 
     CHPCCNagiosHostEventForSSH event(&strServiceConfig);
     MapIPtoNode map;
@@ -820,6 +823,120 @@ bool CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(StringBuffer &strService
 
     return true;
 
+}
+
+bool CHPCCNagiosToolSet::generateNagiosRoxieCeckConfig(StringBuffer &strServiceConfig, const char* pEnvXML , const char* pConfigGenPath)
+{
+    const int nNumValues = 5;
+
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
+    {
+        pConfigGenPath = PCONFIGGEN_PATH;
+    }
+
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
+
+    if (checkFileExists(pConfigGenPath) == false)
+    {
+        return false;
+    }
+
+    MemoryBuffer memBuff;
+    StringBuffer strConfiggenCmdLine(pConfigGenPath);
+
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ALL).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML).append(P_BY_TYPE).append(P_ROXIE);
+
+    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine.str(), memBuff);
+
+    StringBuffer strOutput(memBuff.toByteArray());
+    strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
+    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+    char *pOutput = strdup(strOutput.str());
+
+    int i = -1;
+    char pProcess[1024] = "";
+    int nCount = 0;
+    char *pch = NULL;
+    pch = strtok(pOutput, ",\n");
+    StringBuffer strPort;
+    StringBuffer strIPAddress;
+    char pHostName[1024] = "";
+    char pProcessName[1024] = "";
+
+    while (pch != NULL)
+    {
+        if (nCount % nNumValues ==  0) // Process name
+        {
+            if (*pch != 0 && strcmp(pch, XML_TAG_ROXIE_SERVER) != 0)
+            {
+                delete pOutput;
+                return false;  // expecting only roxie
+            }
+            else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                i = 0;
+            }
+            else if (pProcess == NULL || *pProcess == 0 || strcmp(pProcess, pch) != 0)
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                i++;
+            }
+            else if (strcmp(pProcess,pch) == 0)
+            {
+                i++;
+            }
+        }
+        else if (nCount % nNumValues == 1) // process name
+        {
+            strcpy(pProcessName,pch);
+        }
+        else if (nCount % nNumValues == 2) // IP Address
+        {
+            strIPAddress.clear().append(pch);
+
+            struct hostent* hp = NULL;
+
+            if (bDoLookUp == true)
+            {
+                unsigned int addr = inet_addr(pch);
+                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
+            }
+
+            if (hp == NULL)
+            {
+                bDoLookUp = false;
+                strcpy(pHostName, pch);
+            }
+            else
+            {
+                strcpy(pHostName,hp->h_name);
+            }
+        }
+        else if (nCount % nNumValues == 3) // IP Port
+        {
+            strPort.clear().append(pch);
+        }
+        else if (nCount % nNumValues == 4)
+        {
+            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s of type %s", pProcessName, pProcess)\
+                    .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_ROXIE).append(P_NAGIOS_SERVICE_CONFIG_5);
+
+            strServiceConfig.append("\n");
+        }
+
+        pch = strtok(NULL, ",\n");
+
+        nCount++;
+    }
+
+    delete pOutput;
+
+    return true;
+    \
 }
 
 void CHPCCNagiosToolSet::getHostName(StringBuffer &strHostName, const char *pIP, MapIPtoNode &mapIPtoHostName)

@@ -41,7 +41,7 @@ include_directories (
 ADD_DEFINITIONS( -D_CONSOLE )
 
 HPCC_ADD_EXECUTABLE( check_sasha ${SRCS} )
-#install ( TARGETS hpcc-nagios-tools RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )
+install ( TARGETS check_sasha RUNTIME DESTINATION /usr/lib/nagios/plugins/ )
 target_link_libraries ( check_sasha
          icudata
          jlib

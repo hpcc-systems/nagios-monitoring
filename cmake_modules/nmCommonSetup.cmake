@@ -461,6 +461,11 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
 
   set ( CMAKE_INSTALL_PREFIX "${PREFIX}/${DIR_NAME}" )
 
+  set (CMAKE_SKIP_BUILD_RPATH  FALSE)
+  set (CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+  set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
+  set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
   MACRO (FETCH_GIT_TAG workdir edition result)
       execute_process(COMMAND "${GIT_COMMAND}" describe --tags --dirty --abbrev=6 --match ${edition}*
         WORKING_DIRECTORY "${workdir}"

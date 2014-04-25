@@ -21,3 +21,6 @@
 # ------------
 #    Cmake check_roxie
 #####################################################
+project( check_roxie )
+
+INSTALL(PROGRAMS check_roxie DESTINATION /usr/lib/nagios/plugins/)

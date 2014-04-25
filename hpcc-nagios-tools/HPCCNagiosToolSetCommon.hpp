@@ -20,6 +20,7 @@ static const char *P_CHECK_ESP_SERVICE("check_esp_service_");
 static const char *P_CHECK_SSH_SERVICE("check_ssh_hpcc_machine");
 static const char *P_CHECK_DALI("check_dali");
 static const char *P_CHECK_SASHA("check_sasha");
+static const char *P_CHECK_ROXIE("check_roxie");
 static const char *P_HTTP("http");
 static const char *P_HTTPS("https");
 static const char *P_BY_TYPE(" -t ");
