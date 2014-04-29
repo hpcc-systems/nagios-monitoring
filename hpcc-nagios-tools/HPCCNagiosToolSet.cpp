@@ -7,9 +7,14 @@
 #include <cstring>
 #include "XMLTags.h"
 
+#define DEFAULT_BUFFER_SIZE 1024
+
 const char *P_DALI("dali");
 const char *P_SASHA("sasha");
 const char *P_ROXIE("roxie");
+const char *P_DAFILESRV("dafilesrv");
+
+
 static bool bDoLookUp = true;
 
 class CHPCCNagiosHostEventForSSH : public CHPCCNagiosHostEvent
@@ -103,14 +108,14 @@ bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutput
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+
     char *pOutput = strdup(strOutput.str());
 
     int nCount = 0;
-    char pProcess[1024] = "";
+    char pProcess[DEFAULT_BUFFER_SIZE] = "";
     bool bAdd = false;
     char *pch = NULL;
-    char pHostName[1024] = "";
+    char pHostName[DEFAULT_BUFFER_SIZE] = "";
     StringBuffer strHostConfig;
     int i = 0;
 
@@ -176,7 +181,7 @@ bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutput
                 strcpy(pHostName,hp->h_name);
             }
 
-            static char pLastHostName[1024] = "";
+            static char pLastHostName[DEFAULT_BUFFER_SIZE] = "";
 
             if (bAdd == true)
             {
@@ -237,11 +242,11 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+
     char *pOutput = strdup(strOutput.str());
 
     int nCount = 0;
-    char pProcess[1024] = "";
+    char pProcess[DEFAULT_BUFFER_SIZE] = "";
 
     OwnedIFile outputFile = createIFile(pOutputFilePath);
     OwnedIFileIO io = outputFile->open(IFOcreaterw);
@@ -266,7 +271,8 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
     {
         if (nCount % nNumValues ==  0) // Process name
         {
-            if (*pch != 0 && (strcmp(pch,XML_TAG_ESPPROCESS) == 0) || strcmp(pch, XML_TAG_DALISERVERPROCESS) == 0 || strcmp(pch, XML_TAG_SASHA_SERVER_PROCESS) == 0)
+            if (*pch != 0 && (strcmp(pch,XML_TAG_ESPPROCESS) == 0) || strcmp(pch, XML_TAG_DALISERVERPROCESS) == 0\
+                || strcmp(pch, XML_TAG_SASHA_SERVER_PROCESS) == 0 || strcmp(pch, XML_TAG_DAFILESERVERPROCESS) == 0)
             {
                 i++;
             }
@@ -302,7 +308,9 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
     CHPCCNagiosToolSet::generateNagiosEspServiceConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosDaliCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
-    CHPCCNagiosToolSet::generateNagiosRoxieCeckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
+    CHPCCNagiosToolSet::generateNagiosRoxieCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
+    CHPCCNagiosToolSet::generateNagiosDafileSrvCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
+    CHPCCNagiosToolSet::generateNagiosSystemCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
 
     CHPCCNagiosHostEventForSSH event(&strServiceConfig);
     MapIPtoNode map;
@@ -351,7 +359,7 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(CHPCCNagiosHostEvent &evHost, 
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+
     strOutput.replace('\377',',');
 
     char *pOutput = strdup(strOutput.str());
@@ -366,7 +374,7 @@ bool CHPCCNagiosToolSet::generateNagiosHostConfig(CHPCCNagiosHostEvent &evHost, 
     {
         if (nCount % 2 ==  0) // Process name
         {
-            char pHostName[1024] = "";
+            char pHostName[DEFAULT_BUFFER_SIZE] = "";
             struct hostent* hp = NULL;
 
             if (bDoLookUp == true)
@@ -504,22 +512,23 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+
     char *pOutput = strdup(strOutput.str());
 
     int i = -1;
-    char pProcess[1024] = "";
+    char pProcess[DEFAULT_BUFFER_SIZE] = "";
     int nCount = 0;
     char *pch = NULL;
     pch = strtok(pOutput, ",\n");
     StringBuffer strPort;
     StringBuffer strIPAddress;
-    char pHostName[1024] = "";
-    char pServiceName[1024] = "";
+    char pHostName[DEFAULT_BUFFER_SIZE] = "";
+    char pServiceName[DEFAULT_BUFFER_SIZE] = "";
+    char pProcessName[DEFAULT_BUFFER_SIZE] = "";
 
     while (pch != NULL)
     {
-        if (nCount % 7 ==  0) // Process name
+        if (nCount % 7 ==  0) // Process type
         {
             if (*pch != 0 && strcmp(pch, XML_TAG_ESPPROCESS) != 0)
             {
@@ -541,9 +550,13 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
                 i++;
             }
         }
+        if (nCount % 7 ==  1) // Process name
+        {
+            strncpy(pProcessName, pch, sizeof(pProcessName));
+        }
         else if (nCount % 7 == 3) // service name
         {
-            strcpy(pServiceName,pch);
+            strncpy(pServiceName,pch, sizeof(pServiceName));
         }
         else if (nCount % 7 == 4) // IP Address
         {
@@ -573,7 +586,8 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
         }
         else if (nCount % 7 == 6) // protocol
         {
-            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s of type %s", pServiceName, pProcess)\
+            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2)\
+                    .appendf("check for %s service for instance %s of type %s", pServiceName, pProcessName, pProcess)\
                     .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_ESP_SERVICE).append( strcmp(pch,P_HTTP) == 0 ? P_HTTP : P_HTTPS).append(P_NAGIOS_SEPERATOR)\
                     .append(strPort.str()).append(P_NAGIOS_SERVICE_CONFIG_5);
 
@@ -624,18 +638,18 @@ bool CHPCCNagiosToolSet::generateNagiosDaliCheckConfig(StringBuffer &strServiceC
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+
     char *pOutput = strdup(strOutput.str());
 
     int i = -1;
-    char pProcess[1024] = "";
+    char pProcess[DEFAULT_BUFFER_SIZE] = "";
     int nCount = 0;
     char *pch = NULL;
     pch = strtok(pOutput, ",\n");
     StringBuffer strPort;
     StringBuffer strIPAddress;
-    char pHostName[1024] = "";
-    char pProcessName[1024] = "";
+    char pHostName[DEFAULT_BUFFER_SIZE] = "";
+    char pProcessName[DEFAULT_BUFFER_SIZE] = "";
 
     while (pch != NULL)
     {
@@ -738,18 +752,18 @@ bool CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(StringBuffer &strService
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+
     char *pOutput = strdup(strOutput.str());
 
     int i = -1;
-    char pProcess[1024] = "";
+    char pProcess[DEFAULT_BUFFER_SIZE] = "";
     int nCount = 0;
     char *pch = NULL;
     pch = strtok(pOutput, ",\n");
     StringBuffer strPort;
     StringBuffer strIPAddress;
-    char pHostName[1024] = "";
-    char pProcessName[1024] = "";
+    char pHostName[DEFAULT_BUFFER_SIZE] = "";
+    char pProcessName[DEFAULT_BUFFER_SIZE] = "";
 
     while (pch != NULL)
     {
@@ -825,7 +839,7 @@ bool CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(StringBuffer &strService
 
 }
 
-bool CHPCCNagiosToolSet::generateNagiosRoxieCeckConfig(StringBuffer &strServiceConfig, const char* pEnvXML , const char* pConfigGenPath)
+bool CHPCCNagiosToolSet::generateNagiosRoxieCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML , const char* pConfigGenPath)
 {
     const int nNumValues = 5;
 
@@ -853,18 +867,17 @@ bool CHPCCNagiosToolSet::generateNagiosRoxieCeckConfig(StringBuffer &strServiceC
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
+
     char *pOutput = strdup(strOutput.str());
 
     int i = -1;
-    char pProcess[1024] = "";
+    char pProcess[DEFAULT_BUFFER_SIZE] = "";
     int nCount = 0;
     char *pch = NULL;
     pch = strtok(pOutput, ",\n");
-    StringBuffer strPort;
     StringBuffer strIPAddress;
-    char pHostName[1024] = "";
-    char pProcessName[1024] = "";
+    char pHostName[DEFAULT_BUFFER_SIZE] = "";
+    char pProcessName[DEFAULT_BUFFER_SIZE] = "";
 
     while (pch != NULL)
     {
@@ -916,10 +929,6 @@ bool CHPCCNagiosToolSet::generateNagiosRoxieCeckConfig(StringBuffer &strServiceC
                 strcpy(pHostName,hp->h_name);
             }
         }
-        else if (nCount % nNumValues == 3) // IP Port
-        {
-            strPort.clear().append(pch);
-        }
         else if (nCount % nNumValues == 4)
         {
             strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s of type %s", pProcessName, pProcess)\
@@ -936,15 +945,238 @@ bool CHPCCNagiosToolSet::generateNagiosRoxieCeckConfig(StringBuffer &strServiceC
     delete pOutput;
 
     return true;
-    \
 }
 
-void CHPCCNagiosToolSet::getHostName(StringBuffer &strHostName, const char *pIP, MapIPtoNode &mapIPtoHostName)
+bool CHPCCNagiosToolSet::generateNagiosSystemCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML, const char* pConfigGenPath,\
+                                                         bool bGenCheckProcs, bool bGenCheckDisk, bool bGenCheckUsers,bool bGenCheckLoad)
 {
-    if (pIP == NULL || *pIP == 0)
+    const int nNumValues = 5;
+
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
     {
-        return;
+        pConfigGenPath = PCONFIGGEN_PATH;
     }
 
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
 
+    if (checkFileExists(pConfigGenPath) == false)
+    {
+        return false;
+    }
+
+    MemoryBuffer memBuff;
+    StringBuffer strConfiggenCmdLine(pConfigGenPath);
+
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ALL).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML).append(P_BY_TYPE).append(P_ROXIE);
+
+    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine.str(), memBuff);
+
+    StringBuffer strOutput(memBuff.toByteArray());
+    strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
+
+    char *pOutput = strdup(strOutput.str());
+
+    int i = -1;
+    int nCount = 0;
+    char *pch = NULL;
+    pch = strtok(pOutput, ",\n");
+    StringBuffer strIPAddress;
+    char pHostName[DEFAULT_BUFFER_SIZE] = "";
+
+    while (pch != NULL)
+    {
+        if (nCount % nNumValues == 2) // IP Address
+        {
+            strIPAddress.clear().append(pch);
+
+            struct hostent* hp = NULL;
+
+            if (bDoLookUp == true)
+            {
+                unsigned int addr = inet_addr(pch);
+                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
+            }
+
+            if (hp == NULL)
+            {
+                bDoLookUp = false;
+                strcpy(pHostName, pch);
+            }
+            else
+            {
+                strcpy(pHostName,hp->h_name);
+            }
+        }
+        else if (nCount % nNumValues == 4)
+        {
+            if (bGenCheckProcs == true)
+            {
+                // processes
+                strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", P_CHECK_PROCS)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_PROCS)\
+                        .append(P_NAGIOS_SEPERATOR).append(TOTAL_PROCS_WARNING)\
+                        .append(P_NAGIOS_SEPERATOR).append(TOTAL_PROCS_CRITICAL)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_5);
+                strServiceConfig.append("\n");
+            }
+
+            if (bGenCheckDisk == true)
+            {
+                // disk space
+                strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", P_CHECK_DISK_SPACE)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_DISK_SPACE)\
+                        .append(P_NAGIOS_SEPERATOR).append(DISK_SPACE_PERCENTAGE_WARNING)\
+                        .append(P_NAGIOS_SEPERATOR).append(DISK_SPACE_PERCENTAGE_CRITICAL)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_5);
+                strServiceConfig.append("\n");
+            }
+
+            if (bGenCheckUsers == true)
+            {
+                // number of users
+                strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", P_CHECK_USERS)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_USERS)\
+                        .append(P_NAGIOS_SEPERATOR).append(USER_NUMBER_WARNING)\
+                        .append(P_NAGIOS_SEPERATOR).append(USER_NUMBER_CRITICAL)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_5);
+                strServiceConfig.append("\n");
+            }
+
+            if (bGenCheckLoad == true)
+            {
+                // system load
+                strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", P_CHECK_LOAD)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_LOAD)\
+                        .append(P_NAGIOS_SEPERATOR).append(SYSTEM_LOAD1_WARN)\
+                        .append(P_NAGIOS_SEPERATOR).append(SYSTEM_LOAD5_WARN)\
+                        .append(P_NAGIOS_SEPERATOR).append(SYSTEM_LOAD15_WARN)\
+                        .append(P_NAGIOS_SEPERATOR).append(SYSTEM_LOAD1_CRITICAL)\
+                        .append(P_NAGIOS_SEPERATOR).append(SYSTEM_LOAD5_CRITICAL)\
+                        .append(P_NAGIOS_SEPERATOR).append(SYSTEM_LOAD15_CRITICAL)\
+                        .append(P_NAGIOS_SERVICE_CONFIG_5);
+                strServiceConfig.append("\n");
+            }
+        }
+
+        pch = strtok(NULL, ",\n");
+
+        nCount++;
+    }
+
+    delete pOutput;
+
+    return true;
+}
+
+bool CHPCCNagiosToolSet::generateNagiosDafileSrvCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML, const char* pConfigGenPath)
+{
+    const int nNumValues = 5;
+
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
+    {
+        pConfigGenPath = PCONFIGGEN_PATH;
+    }
+
+    if (pEnvXML == NULL || *pEnvXML == 0)
+    {
+        pEnvXML = PENV_XML;
+    }
+
+    if (checkFileExists(pConfigGenPath) == false)
+    {
+        return false;
+    }
+
+    MemoryBuffer memBuff;
+    StringBuffer strConfiggenCmdLine(pConfigGenPath);
+
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ALL).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML).append(P_BY_TYPE).append(P_DAFILESRV);
+
+    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine.str(), memBuff);
+
+    StringBuffer strOutput(memBuff.toByteArray());
+    strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
+
+    char *pOutput = strdup(strOutput.str());
+
+    int i = -1;
+    char pProcess[DEFAULT_BUFFER_SIZE] = "";
+    int nCount = 0;
+    char *pch = NULL;
+    pch = strtok(pOutput, ",\n");
+    StringBuffer strIPAddress;
+    char pHostName[DEFAULT_BUFFER_SIZE] = "";
+    char pProcessName[DEFAULT_BUFFER_SIZE] = "";
+
+    while (pch != NULL)
+    {
+        if (nCount % nNumValues ==  0) // Process name
+        {
+            if (*pch != 0 && strcmp(pch, XML_TAG_DAFILESERVERPROCESS) != 0)
+            {
+                delete pOutput;
+                return false;  // expecting only dafilesrvprocess
+            }
+            else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                i = 0;
+            }
+            else if (pProcess == NULL || *pProcess == 0 || strcmp(pProcess, pch) != 0)
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                i++;
+            }
+            else if (strcmp(pProcess,pch) == 0)
+            {
+                i++;
+            }
+        }
+        else if (nCount % nNumValues == 1) // process name
+        {
+            strcpy(pProcessName,pch);
+        }
+        else if (nCount % nNumValues == 2) // IP Address
+        {
+            strIPAddress.clear().append(pch);
+
+            struct hostent* hp = NULL;
+
+            if (bDoLookUp == true)
+            {
+                unsigned int addr = inet_addr(pch);
+                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
+            }
+
+            if (hp == NULL)
+            {
+                bDoLookUp = false;
+                strcpy(pHostName, pch);
+            }
+            else
+            {
+                strcpy(pHostName,hp->h_name);
+            }
+        }
+        else if (nCount % nNumValues == 4)
+        {
+            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s of type %s", pProcessName, pProcess)\
+                    .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_DAFILESRV)\
+                    .append(P_NAGIOS_SEPERATOR).append(pHostName)\
+                    .append(P_NAGIOS_SERVICE_CONFIG_5);
+
+            strServiceConfig.append("\n");
+        }
+
+        pch = strtok(NULL, ",\n");
+
+        nCount++;
+    }
+
+    delete pOutput;
+
+    return true;
 }

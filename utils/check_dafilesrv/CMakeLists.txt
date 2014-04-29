@@ -13,7 +13,35 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 ################################################################################
-HPCC_ADD_SUBDIRECTORY(check_dali)
-HPCC_ADD_SUBDIRECTORY(check_roxie)
-HPCC_ADD_SUBDIRECTORY(check_sasha)
-HPCC_ADD_SUBDIRECTORY(check_dafilesrv)
+
+
+# Component: check_dafilesrv
+#####################################################
+# Description:
+# ------------
+#    Cmake check_dafilesrv
+#####################################################
+
+project( check_dafilesrv )
+
+set (   SRCS
+        main.cpp
+    )
+
+include_directories (
+        ${HPCC_SOURCE_DIR}/common
+	${HPCC_SOURCE_DIR}/common/remote
+        ${HPCC_SOURCE_DIR}/system/jlib
+        ${HPCC_SOURCE_DIR}/system/include
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_BINARY_DIR}/oss
+    )
+
+ADD_DEFINITIONS( -D_CONSOLE )
+
+HPCC_ADD_EXECUTABLE( check_dafilesrv ${SRCS} )
+install ( TARGETS check_dafilesrv RUNTIME DESTINATION /usr/lib/nagios/plugins/ )
+target_link_libraries ( check_dafilesrv
+         jlib
+         dalibase
+    )

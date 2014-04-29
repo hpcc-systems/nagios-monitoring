@@ -8,6 +8,20 @@ static const int   DEFAULT_TIMEOUT(5*1000);
 static const int   DALI_CHECK_TIMEOUT(DEFAULT_TIMEOUT);
 static const int   SASHA_CHECK_TIMEOUT(DEFAULT_TIMEOUT);
 
+const int DISK_SPACE_PERCENTAGE_WARNING     = 15;
+const int DISK_SPACE_PERCENTAGE_CRITICAL    = 8;
+const int USER_NUMBER_WARNING               = 5;
+const int USER_NUMBER_CRITICAL              = 10;
+const int TOTAL_PROCS_WARNING               = 350;
+const int TOTAL_PROCS_CRITICAL              = 500;
+const float SYSTEM_LOAD1_WARN               = 5.0;
+const float SYSTEM_LOAD5_WARN               = 4.0;
+const float SYSTEM_LOAD15_WARN              = 3.0;
+const float SYSTEM_LOAD1_CRITICAL           = 10.0;
+const float SYSTEM_LOAD5_CRITICAL           = 6.0;
+const float SYSTEM_LOAD15_CRITICAL          = 4.0;
+
+
 static const char *P_CHECK_NRPE_1_ARG("check_nrpe_1_arg!");
 static const char *P_CHECK_NRPE_2_ARG("check_nrpe_2_arg!");
 
@@ -21,6 +35,11 @@ static const char *P_CHECK_SSH_SERVICE("check_ssh_hpcc_machine");
 static const char *P_CHECK_DALI("check_dali");
 static const char *P_CHECK_SASHA("check_sasha");
 static const char *P_CHECK_ROXIE("check_roxie");
+static const char *P_CHECK_DAFILESRV("check_dafilesrv");
+static const char *P_CHECK_PROCS("check_procs");
+static const char *P_CHECK_DISK_SPACE("check_all_disks");
+static const char *P_CHECK_USERS("check_users");
+static const char *P_CHECK_LOAD("check_load");
 static const char *P_HTTP("http");
 static const char *P_HTTPS("https");
 static const char *P_BY_TYPE(" -t ");

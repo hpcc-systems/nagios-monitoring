@@ -13,7 +13,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 ################################################################################
-HPCC_ADD_SUBDIRECTORY(check_dali)
-HPCC_ADD_SUBDIRECTORY(check_roxie)
-HPCC_ADD_SUBDIRECTORY(check_sasha)
-HPCC_ADD_SUBDIRECTORY(check_dafilesrv)
+
+
+# Component: hpcc_nagios.cfg
+#####################################################
+# Description:
+# ------------
+#    Cmake hpcc_nagios.cfg
+#####################################################
+INSTALL(FILES hpcc_nagios.cfg DESTINATION /etc/nagios-plugins/config)

@@ -6,6 +6,11 @@
 static const char *PCONFIGGEN_PATH("/opt/HPCCSystems/sbin/configgen");
 static const char *PENV_XML("/etc/HPCCSystems/environment.xml");
 
+static const bool bDefaultCheckProcs    = true;
+static const bool bDefaultCheckDisk     = true;
+static const bool bDefaultCheckLoad     = true;
+static const bool bDefaultCheckUsers    = true;
+
 class StringArray;
 class StringBuffer;
 
@@ -41,10 +46,13 @@ protected:
     static bool generateNagiosSSHCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
     static bool generateNagiosDaliCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
     static bool generateNagiosSashaCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
-    static bool generateNagiosRoxieCeckConfig(StringBuffer &strServiceConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
+    static bool generateNagiosRoxieCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
+    static bool generateNagiosDafileSrvCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
+    static bool generateNagiosSystemCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH,\
+                                                    bool bGenCheckProcs = bDefaultCheckProcs, bool bGenCheckDisk = bDefaultCheckDisk,\
+                                                    bool bGenCheckUsers = bDefaultCheckUsers, bool bCheckLoad = bDefaultCheckLoad);
     static bool generateNagiosHostConfig(CHPCCNagiosHostEvent &evHost, MapIPtoNode &mapIPtoHostName, const char* pEnvXML = PENV_XML, const char* pConfigGenPath = PCONFIGGEN_PATH);
     static bool getConfiggenOutput(const char* pEnvXML, const char* pConfigGenPath, const char* pCommandLine, MemoryBuffer &memBuff);
-    static void getHostName(StringBuffer &strHostName, const char *pIP,  MapIPtoNode &mapIPtoHostName);
 };
 
 #endif // _HPCC_NAGIOSTOOLSET_HPP_
