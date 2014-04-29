@@ -1165,7 +1165,6 @@ bool CHPCCNagiosToolSet::generateNagiosDafileSrvCheckConfig(StringBuffer &strSer
         {
             strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(pHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s of type %s", pProcessName, pProcess)\
                     .append(P_NAGIOS_SERVICE_CONFIG_3).append(P_CHECK_DAFILESRV)\
-                    .append(P_NAGIOS_SEPERATOR).append(pHostName)\
                     .append(P_NAGIOS_SERVICE_CONFIG_5);
 
             strServiceConfig.append("\n");
