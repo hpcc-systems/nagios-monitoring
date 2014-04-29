@@ -33,6 +33,7 @@ ENDIF()
 
 
 include (${HPCC_NM_SOURCE_DIR}/version.cmake)
+include (${HPCC_SOURCE_DIR}/version.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/optionDefaults.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/nmCommonSetup.cmake)
 #include (${HPCC_SOURCE_DIR}/cmake_modules/commonSetup.cmake)
@@ -47,6 +48,7 @@ SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti -fPIC -fmessage-length=0 -Wforma
 MESSAGE("*** START BUILDING HPCC PLATFORM ***")
 MESSAGE (HPCC_SOURCE_DIR: ${HPCC_SOURCE_DIR})
 ADD_SUBDIRECTORY(${HPCC_SOURCE_DIR} oss EXCLUDE_FROM_ALL)
+INCLUDE(${HPCC_NM_SOURCE_DIR}/platform-version-prereq.cmake)
 
 ###
 ## Run file configuration to set build tag along with install lines for generated
@@ -189,6 +191,7 @@ IF (NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.2")
 
     ENDIF ( CMAKE_SYSTEM MATCHES Linux )
     IF ( EXISTS ${CMAKE_MODULE_PATH}/dependencies/${packageRevision}.cmake )
+	CONFIGURE_FILE(${HPCC_NM_SOURCE_DIR}/cmake_modules/dependencies/${packageRevision}.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/dependencies/${packageRevision}.cmake)
         INCLUDE( ${CMAKE_MODULE_PATH}/dependencies/${packageRevision}.cmake )
     ELSE()
          MESSAGE("-- WARNING: DEPENDENCY FILE FOR ${packageRevision} NOT FOUND")

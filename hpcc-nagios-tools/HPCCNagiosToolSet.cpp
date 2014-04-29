@@ -14,7 +14,6 @@ const char *P_SASHA("sasha");
 const char *P_ROXIE("roxie");
 const char *P_DAFILESRV("dafilesrv");
 
-
 static bool bDoLookUp = true;
 
 class CHPCCNagiosHostEventForSSH : public CHPCCNagiosHostEvent
@@ -47,8 +46,6 @@ protected:
     }
 };
 
-const int CHPCCNagiosHostEventForSSH::m_nTimeOut = 10;
-
 class CHPCCNagiosHostEventHostConfig : public CHPCCNagiosHostEvent
 {
 public:
@@ -73,6 +70,99 @@ protected:
     {
     }
 };
+
+const int CHPCCNagiosHostEventForSSH::m_nTimeOut = 10;
+
+bool CHPCCNagiosToolSet::generateNagiosHostConfig(CHPCCNagiosHostEvent &evHost, MapIPtoNode &mapIPtoHostName, const char* pEnvXML, const char* pConfigGenPath)
+{
+    if (pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
+    {
+        return false;
+    }
+
+    MemoryBuffer memBuff;
+    StringBuffer strConfiggenCmdLine(pConfigGenPath);
+
+    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_MACHINES).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
+
+    FILE *fp = popen(strConfiggenCmdLine.str(), "r");
+
+    if (fp == NULL)
+    {
+        return false;
+    }
+
+    int nCharacter = -1;
+    CFileInputStream cfgInputStream(fileno(fp));
+
+    memBuff.clear();
+
+    do
+    {
+        nCharacter = cfgInputStream.readNext();
+
+        memBuff.append(static_cast<unsigned char>(nCharacter));
+    }
+    while(nCharacter != -1);
+
+    memBuff.append('\0');
+
+    StringBuffer strOutput(memBuff.toByteArray());
+    strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
+
+    strOutput.replace('\377',',');
+
+    char *pOutput = strdup(strOutput.str());
+
+    int nCount = 0;
+
+    char *pch = NULL;
+    pch = strtok(pOutput, ",\n");
+
+    int i = 0;
+    while (pch != NULL)
+    {
+        if (nCount % 2 ==  0) // Process name
+        {
+            char pHostName[DEFAULT_BUFFER_SIZE] = "";
+            struct hostent* hp = NULL;
+
+            if (bDoLookUp == true)
+            {
+                unsigned int addr = inet_addr(pch);
+                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
+            }
+
+            if (hp == NULL)
+            {
+                bDoLookUp = false;
+                strcpy(pHostName, pch);
+            }
+            else
+            {
+                strcpy(pHostName,hp->h_name);
+            }
+
+            evHost.onHostEvent(pHostName, i,pch);
+
+            struct NodeName nm;
+
+            nm.strHostName.set(pHostName);
+            nm.strHostAlias.setf("%s %d", pHostName, i);
+            mapIPtoHostName.setValue(pch, nm);
+
+            i++;
+        }
+
+        pch = strtok(NULL, ",\n");
+
+        nCount++;
+    }
+
+    delete pOutput;
+
+    return true;
+}
 
 bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
 {
@@ -108,6 +198,7 @@ bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutput
 
     StringBuffer strOutput(memBuff.toByteArray());
     strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
+    strOutput.replaceString(",\n",",X\n"); // sttrok pecularity with adjacent delimiters
 
     char *pOutput = strdup(strOutput.str());
 
@@ -186,7 +277,7 @@ bool CHPCCNagiosToolSet::generateHostGroupsConfigurationFile(const char* pOutput
             if (bAdd == true)
             {
                 strHostConfig.append(P_NAGIOS_HOSTS_GROUP_CONFIG_1).append(pProcess).append("-servers").append(P_NAGIOS_HOSTS_GROUP_CONFIG_2).append(pProcess).append(" servers")\
-                                                                        .append(P_NAGIOS_HOSTS_GROUP_CONFIG_3).append(pHostName);
+                                .append(P_NAGIOS_HOSTS_GROUP_CONFIG_3).append(pHostName);
 
                 strcpy(pLastHostName,pHostName);
                 bAdd = false;
@@ -291,14 +382,6 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
                 i++;
             }
         }
-        /*else if (nCount % nNumValues == 2) // IP address
-        {
-            //TODO: Default check?
-            /*strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_1).append(mapIPtoHostName.getValue(pch)->strHostName).append(P_NAGIOS_SERVICE_CONFIG_2).appendf("check for %s", pProcess)\
-                    .append(P_NAGIOS_SERVICE_CONFIG_3).appendf("check_%s", (StringBuffer(pProcess)).toLowerCase().str()).append(P_NAGIOS_SEPERATOR).append("<TODO: PARAMS>").append(P_NAGIOS_SERVICE_CONFIG_5);
-
-            strServiceConfig.append("\n");
-        }*/
 
         pch = strtok(NULL, ",\n");
 
@@ -320,133 +403,6 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
     io->close();
 
     delete pOutput;
-    return true;
-}
-
-bool CHPCCNagiosToolSet::generateNagiosHostConfig(CHPCCNagiosHostEvent &evHost, MapIPtoNode &mapIPtoHostName, const char* pEnvXML, const char* pConfigGenPath)
-{
-    if (pConfigGenPath == NULL || *pConfigGenPath == 0 || checkFileExists(pConfigGenPath) == false)
-    {
-        return false;
-    }
-
-    MemoryBuffer memBuff;
-    StringBuffer strConfiggenCmdLine(pConfigGenPath);
-
-    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_MACHINES).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
-
-    FILE *fp = popen(strConfiggenCmdLine.str(), "r");
-
-    if (fp == NULL)
-    {
-        return false;
-    }
-
-    int nCharacter = -1;
-    CFileInputStream cfgInputStream(fileno(fp));
-
-    memBuff.clear();
-
-    do
-    {
-        nCharacter = cfgInputStream.readNext();
-
-        memBuff.append(static_cast<unsigned char>(nCharacter));
-    }
-    while(nCharacter != -1);
-
-    memBuff.append('\0');
-
-    StringBuffer strOutput(memBuff.toByteArray());
-    strOutput.replaceString(",,",",X,"); // sttrok pecularity with adjacent delimiters
-
-    strOutput.replace('\377',',');
-
-    char *pOutput = strdup(strOutput.str());
-
-    int nCount = 0;
-
-    char *pch = NULL;
-    pch = strtok(pOutput, ",\n");
-
-    int i = 0;
-    while (pch != NULL)
-    {
-        if (nCount % 2 ==  0) // Process name
-        {
-            char pHostName[DEFAULT_BUFFER_SIZE] = "";
-            struct hostent* hp = NULL;
-
-            if (bDoLookUp == true)
-            {
-                unsigned int addr = inet_addr(pch);
-                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
-            }
-
-            if (hp == NULL)
-            {
-                bDoLookUp = false;
-                strcpy(pHostName, pch);
-            }
-            else
-            {
-                strcpy(pHostName,hp->h_name);
-            }
-
-            evHost.onHostEvent(pHostName, i,pch);
-
-            struct NodeName nm;
-
-            nm.strHostName.set(pHostName);
-            nm.strHostAlias.setf("%s %d", pHostName, i);
-            mapIPtoHostName.setValue(pch, nm);
-
-            i++;
-        }
-
-        pch = strtok(NULL, ",\n");
-
-        nCount++;
-    }
-
-    delete pOutput;
-
-    return true;
-}
-
-bool CHPCCNagiosToolSet::generateServicesConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath )
-{
-
-    if (pConfigGenPath == NULL || *pConfigGenPath == 0)
-    {
-        pConfigGenPath = PCONFIGGEN_PATH;
-    }
-
-    if (pEnvXML == NULL || *pEnvXML == 0)
-    {
-        pEnvXML = PENV_XML;
-    }
-
-    if (pOutputFilePath == NULL || *pOutputFilePath == 0 || checkFileExists(pConfigGenPath) == false)
-    {
-        return false;
-    }
-
-    MemoryBuffer memBuff;
-    StringBuffer strConfiggenCmdLine(pConfigGenPath);
-
-    strConfiggenCmdLine.append(P_CONFIGGEN_PARAM_LIST_ALL).append(P_CONFIGGEN_PARAM_ENVIRONMENT).append(pEnvXML);
-
-    CHPCCNagiosToolSet::getConfiggenOutput(pEnvXML, pConfigGenPath, strConfiggenCmdLine, memBuff);
-
-    return true;
-}
-
-bool CHPCCNagiosToolSet::generateServicePluginConfigurationFile(const char* pOutputFilePath, const char* pEnvXML, const char* pConfigGenPath)
-{
-    OwnedIFile outputFile = createIFile(pOutputFilePath);
-    OwnedIFileIO io = outputFile->open(IFOcreaterw);
-
     return true;
 }
 
@@ -602,11 +558,6 @@ bool CHPCCNagiosToolSet::generateNagiosEspServiceConfig(StringBuffer &strService
 
     delete pOutput;
 
-    return true;
-}
-
-bool CHPCCNagiosToolSet::generateNagiosSSHCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML, const char* pConfigGenPath)
-{
     return true;
 }
 

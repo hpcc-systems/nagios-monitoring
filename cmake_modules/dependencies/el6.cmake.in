@@ -1,0 +1,3 @@
+set ( CPACK_RPM_PACKAGE_REQUIRES "hpccsystems-platform >= ${HPCC_MAJOR}.${HPCC_MINOR}.${HPCC_POINT}-${HPCC_SEQUENCE}")
+set ( CPACK_DEBIAN_PACKAGE_DEPENDS "nagios3")
+
