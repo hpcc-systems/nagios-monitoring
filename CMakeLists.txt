@@ -172,7 +172,6 @@ IF (NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.2")
                 ## CPack instruction required for Debian
                 ###
                 MESSAGE ("-- Packing BASH installation files")
-                SET ( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/postinst;${CMAKE_SOURCE_DIR}/prerm;${CMAKE_SOURCE_DIR}/postrm" )
             ENDIF ()
 
         ELSEIF ( ${packageManagement} STREQUAL "RPM" )
@@ -182,9 +181,6 @@ IF (NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.2")
             ###
             MESSAGE("-- Will build RPM package")
             MESSAGE ("-- Packing BASH installation files")
-            SET ( CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/postinst" )
-            SET ( CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_SOURECE_DIR}/prerm" )
-            SET ( CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/postrm" )
         ELSE()
             MESSAGE("WARNING: Unsupported package ${packageManagement}.")
         ENDIF ()
