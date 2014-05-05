@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OUTPUT=`testsocket $1 "<control:metrics/>" |grep Status |grep ok -c`
+OUTPUT=`testsocket $1 "<control:alive/>" |grep Status |grep ok -c`
 
 if [ "$OUTPUT" -eq "1" ]; then
     echo "OK"
