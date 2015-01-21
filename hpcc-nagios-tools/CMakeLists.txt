@@ -27,6 +27,7 @@ project( hpcc-nagios-tools )
 set (   SRCS
         main.cpp
         HPCCNagiosToolSet.cpp
+        HPCCNagiosToolSetCommon.hpp
     )
 
 include_directories (
