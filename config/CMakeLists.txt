@@ -15,10 +15,10 @@
 ################################################################################
 
 
-# Component: hpcc_nagios.cfg
+# Component: hpcc nagios and nrpe config
 #####################################################
 # Description:
 # ------------
-#    Cmake hpcc_nagios.cfg
+#    CMake for hpcc nagios and nrpe config
 #####################################################
-INSTALL(FILES hpcc_nagios.cfg DESTINATION /etc/nagios-plugins/config)
+INSTALL(FILES hpcc_nrpe.cfg DESTINATION   /etc/nagios/nrpe.d/)

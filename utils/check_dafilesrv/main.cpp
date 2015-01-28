@@ -1,11 +1,12 @@
 #include "rmtfile.hpp"
 #include <iostream>
+#include "portlist.h"
 
 const int nOKRetValue = 0;
 const int nCriticalRetValue = 2;
 const int nDefaultTimeOut=30 * 1000;
 const int nExceptionRetVal = -99;
-const int nDefaultPort = 7100;
+const int nDefaultPort = DAFILESRV_PORT;
 
 void usage()
 {

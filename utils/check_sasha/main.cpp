@@ -12,7 +12,7 @@ const int nDefaultTimeOut=30 * 1000;
 
 void usage()
 {
-    std::cout << "HPCC Systems Nagios Check for Dali\nUsage: check_sasha <sasha> <Port> [Timeout default = " << nDefaultTimeOut << "]\n";
+    std::cout << "HPCC Systems Nagios Check for Sasha\nUsage: check_sasha <sasha> <Port> [Timeout default = " << nDefaultTimeOut << "]\n";
 }
 
 int critical(const char* pIP, const char* pPort)

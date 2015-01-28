@@ -4,6 +4,7 @@ cmake_minimum_required (VERSION 2.8.2)
 set (HPCC_NM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 MESSAGE ("************ Setting CMAKE_MODULE_PATH to ${HPCC_NM_SOURCE_DIR}/cmake_modules/")
 set (CMAKE_MODULE_PATH "${HPCC_NM_SOURCE_DIR}/cmake_modules/")
+
 MESSAGE ("CMAKE_MODULE_PATH is set to ${CMAKE_MODULE_PATH}")
 
 ###
@@ -36,7 +37,6 @@ include (${HPCC_NM_SOURCE_DIR}/version.cmake)
 include (${HPCC_SOURCE_DIR}/version.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/optionDefaults.cmake)
 include (${HPCC_NM_SOURCE_DIR}/cmake_modules/nmCommonSetup.cmake)
-#include (${HPCC_SOURCE_DIR}/cmake_modules/commonSetup.cmake)
 include (${HPCC_SOURCE_DIR}/version.cmake)
 
 #MESSAGE ( "40 - CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
@@ -81,6 +81,10 @@ MESSAGE ( "CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}" )
 HPCC_ADD_SUBDIRECTORY( hpcc-nagios-tools )
 HPCC_ADD_SUBDIRECTORY( utils )
 HPCC_ADD_SUBDIRECTORY( config )
+
+MESSAGE (HPCC_SOURCE_DIR: ${HPCC_SOURCE_DIR})
+#ADD_SUBDIRECTORY(${HPCC_SOURCE_DIR} oss EXCLUDE_FROM_ALL)
+
 
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${majorver})
@@ -138,11 +142,6 @@ IF ( CMAKE_SYSTEM_NAME MATCHES Linux )
 
 ENDIF ( CMAKE_SYSTEM_NAME MATCHES Linux )
 
-#MESSAGE ("-- Current release version is ${CPACK_PACKAGE_FILE_NAME}")
-#MESSAGE( STATUS "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
-#MESSAGE( STATUS "CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR} )
-#MESSAGE( STATUS "CMAKE_LIBRARY_PATH: "${CMAKE_LIBRARY_PATH} )
-
 get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS) 
 
 if ("${LIB64}" STREQUAL "TRUE") 
@@ -153,10 +152,8 @@ endif()
 
 set(INSTALL_LIB_DIR  lib${LIBSUFFIX} CACHE PATH "Installation directory for libraries") 
 mark_as_advanced(INSTALL_LIB_DIR) 
-#message( STATUS "INSTALL_LIB_DIR: ${INSTALL_LIB_DIR}" )
 
 get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS) 
-#message( STATUS "lib64: ${LIB64}" )
 
 SET ( CPACK_SOURCE_GENERATOR TGZ )
 
@@ -186,9 +183,9 @@ IF (NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.2")
         ENDIF ()
 
     ENDIF ( CMAKE_SYSTEM MATCHES Linux )
-    IF ( EXISTS ${CMAKE_MODULE_PATH}/dependencies/${packageRevision}.cmake )
+    IF ( EXISTS ${CMAKE_MODULE_PATH}/dependencies/${packageRevision}.cmake.in )
 	CONFIGURE_FILE(${HPCC_NM_SOURCE_DIR}/cmake_modules/dependencies/${packageRevision}.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/dependencies/${packageRevision}.cmake)
-        INCLUDE( ${CMAKE_MODULE_PATH}/dependencies/${packageRevision}.cmake )
+        INCLUDE( ${CMAKE_CURRENT_BINARY_DIR}/dependencies/${packageRevision}.cmake )
     ELSE()
          MESSAGE("-- WARNING: DEPENDENCY FILE FOR ${packageRevision} NOT FOUND")
     ENDIF()
@@ -199,8 +196,6 @@ IF (NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.2")
 
     SET ( CPACK_MONOLITHIC_INSTALL TRUE )
 		SET ( CPACK_PACKAGE_VENDOR "HPCC Systems" )
-#		INSTALL( FILES "${CMAKE_CURRENT_SOURCE_DIR}/modroxie.py" DESTINATION ${CMAKE_LIBRARY_PATH}/nagios/python_modules  )
-#		INSTALL( FILES "${CMAKE_CURRENT_SOURCE_DIR}/modroxie.pyconf" DESTINATION /etc/nagios/conf.d  )
 		INCLUDE ( CPack )
 ELSE()
     MESSAGE("WARNING: CMAKE 2.8.1 or later required to create RPMs from this project")
