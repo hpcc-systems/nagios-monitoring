@@ -627,7 +627,7 @@ bool CHPCCNagiosToolSet::generateNagiosDaliCheckConfig(StringBuffer &strServiceC
         {
             if (*pch != 0 && strcmp(pch, XML_TAG_DALISERVERPROCESS) != 0)
             {
-                delete pOutput;
+                free(pOutput);
                 return false;  // expecting only Dali
             }
             else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
@@ -725,7 +725,7 @@ bool CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(StringBuffer &strService
         {
             if (*pch != 0 && strcmp(pch, XML_TAG_SASHA_SERVER_PROCESS) != 0)
             {
-                delete pOutput;
+                free(pOutput);
                 return false;  // expecting only sasha
             }
             else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
@@ -791,7 +791,7 @@ bool CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(StringBuffer &strService
         nCount++;
     }
 
-    delete pOutput;
+    free(pOutput);
 
     return true;
 }
@@ -821,7 +821,7 @@ bool CHPCCNagiosToolSet::generateNagiosRoxieCheckConfig(StringBuffer &strService
         {
             if (*pch != 0 && strcmp(pch, XML_TAG_ROXIE_SERVER) != 0)
             {
-                delete pOutput;
+                free(pOutput);
                 return false;  // expecting only roxie
             }
             else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
@@ -878,15 +878,15 @@ bool CHPCCNagiosToolSet::generateNagiosRoxieCheckConfig(StringBuffer &strService
         nCount++;
     }
 
-    delete pOutput;
+    free(pOutput);
 
     return true;
 }
 
 bool CHPCCNagiosToolSet::generateNagiosSystemCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML, const char* pConfigGenPath)
 {
-    const int nNumValues = 6;
-    char *pOutput = CHPCCNagiosToolSet::invokeConfigGen(pEnvXML, pConfigGenPath, P_CONFIGGEN_PARAM_LIST_ALL);
+    const int nNumValues = 2;
+    char *pOutput = CHPCCNagiosToolSet::invokeConfigGen(pEnvXML, pConfigGenPath, P_CONFIGGEN_PARAM_MACHINES);
 
     if (pOutput == NULL)
     {
@@ -902,7 +902,7 @@ bool CHPCCNagiosToolSet::generateNagiosSystemCheckConfig(StringBuffer &strServic
 
     while (pch != NULL)
     {
-        if (nCount % nNumValues == 2) // IP Address
+        if (nCount % nNumValues == 0) // IP Address
         {
             strIPAddress.clear().append(pch);
 
@@ -923,9 +923,6 @@ bool CHPCCNagiosToolSet::generateNagiosSystemCheckConfig(StringBuffer &strServic
             {
                 strcpy(pHostName,hp->h_name);
             }
-        }
-        else if (nCount % nNumValues == 4)
-        {
             if (CHPCCNagiosToolSet::m_bCheckProcs == true)
             {
                 // processes
@@ -992,7 +989,7 @@ bool CHPCCNagiosToolSet::generateNagiosSystemCheckConfig(StringBuffer &strServic
         nCount++;
     }
 
-    delete pOutput;
+    free(pOutput);
 
     return true;
 }
@@ -1023,7 +1020,7 @@ bool CHPCCNagiosToolSet::generateNagiosDafileSrvCheckConfig(StringBuffer &strSer
         {
             if (*pch != 0 && strcmp(pch, XML_TAG_DAFILESERVERPROCESS) != 0)
             {
-                delete pOutput;
+                free(pOutput);
                 return false;  // expecting only dafilesrvprocess
             }
             else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
