@@ -22,3 +22,4 @@
 #    CMake for hpcc nagios and nrpe config
 #####################################################
 INSTALL(FILES hpcc_nrpe.cfg DESTINATION   /etc/nagios/nrpe.d/)
+INSTALL(FILES hpcc_nagios.cfg DESTINATION /etc/nagios3/conf.d/)
