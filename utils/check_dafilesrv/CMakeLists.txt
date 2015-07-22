@@ -40,7 +40,17 @@ include_directories (
 ADD_DEFINITIONS( -D_CONSOLE )
 
 HPCC_ADD_EXECUTABLE( check_dafilesrv ${SRCS} )
-install ( TARGETS check_dafilesrv RUNTIME DESTINATION /usr/lib/nagios/plugins/ )
+
+IF ( "${packageManagement}" STREQUAL "RPM" )
+        IF ( "${ARCH64BIT}" EQUAL 1 )
+		install ( TARGETS check_dafilesrv RUNTIME DESTINATION /usr/lib64/nagios/plugins/ )
+	ELSE ()
+		install ( TARGETS check_dafilesrv RUNTIME DESTINATION /usr/lib//nagios/plugins/ )
+	ENDIF ()
+ELSE ()
+	install ( TARGETS check_dafilesrv RUNTIME DESTINATION /usr/lib/nagios/plugins/ )
+ENDIF ()
+
 target_link_libraries ( check_dafilesrv
          jlib
          dalibase

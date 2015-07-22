@@ -1,5 +1,5 @@
 project (hpccsystems-nagios-monitoring)
-cmake_minimum_required (VERSION 2.8.2)
+cmake_minimum_required (VERSION 2.8.11)
 
 set (HPCC_NM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 MESSAGE ("************ Setting CMAKE_MODULE_PATH to ${HPCC_NM_SOURCE_DIR}/cmake_modules/")
@@ -86,22 +86,24 @@ HPCC_ADD_SUBDIRECTORY( commands )
 MESSAGE (HPCC_SOURCE_DIR: ${HPCC_SOURCE_DIR})
 #ADD_SUBDIRECTORY(${HPCC_SOURCE_DIR} oss EXCLUDE_FROM_ALL)
 
-
+SET (VER-SEPARTOR "-")
+IF ("${stagever}" MATCHES "^rc[0-9]-$")
+   SET (VER_SEPARATOR "~")
+ENDIF ()
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${majorver})
 SET(CPACK_PACKAGE_VERSION_MINOR ${minorver})
-SET(CPACK_PACKAGE_VERSION_PATCH ${point}-${stagever})
+SET(CPACK_PACKAGE_VERSION_PATCH ${point}${VER_SEPERATOR}${stagever})
 
 
 set (CPACK_PACKAGE_CONTACT "HPCCSystems <ossdevelopment@lexisnexis.com>")
 set (CPACK_SOURCE_GENERATOR TGZ )
-if ( ${ARCH64BIT} EQUAL 1 )
-    set ( CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
-else( ${ARCH64BIT} EQUAL 1 )
-    set ( CPACK_RPM_PACKAGE_ARCHITECTURE "i386")
-endif ( ${ARCH64BIT} EQUAL 1 )
-
 set (CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${CPACK_RPM_PACKAGE_ARCHITECTURE}")
+set (CPACK_RPM_PACKAGE_VERSION "${version}" )
+set (CPACK_RPM_PACKAGE_RELEASE "${stagever}")
+
+# Fix filesystem conflict error, This fix requires cmake 3+
+SET(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/etc/nagios;/etc/nagios/conf.d;/etc/nrpe.d;/usr/lib64/nagios" )
 
 MESSAGE ( "CPACK_RPM_PACKAGE_ARCHITECTURE ${CPACK_RPM_PACKAGE_ARCHITECTURE}" )
 MESSAGE ( "CPACK_SYSTEM_NAME ${CPACK_SYSTEM_NAME}" )
