@@ -1442,24 +1442,21 @@ bool CHPCCNagiosToolSet::generateNagiosEscalationCommandConfig(StringBuffer &str
     free(pOutput);
 
     strCommandConfig.append(P_NAGIOS_COMMAND_CONFIG_1);
-    for (int i = 0; i < strArrayIPPort.length(); i++)
-    {
-        strCommandConfig.append(P_NAGIOS_COMMAND_NAME).append(CHPCCNagiosToolSet::m_pServiceNotificatonCommand);
-        strCommandConfig.append(P_NAGIOS_COMMAND_LINE).append(CHPCCNagiosToolSet::m_pSendServiceStatus);
+    strCommandConfig.append(P_NAGIOS_COMMAND_NAME).append(CHPCCNagiosToolSet::m_pServiceNotificatonCommand);
+    strCommandConfig.append(P_NAGIOS_COMMAND_LINE).append(CHPCCNagiosToolSet::m_pSendServiceStatus);
 
-        if (strEclWatchHostPortArray.length() > 0)
+    if (strEclWatchHostPortArray.length() > 0)
+    {
+        for (int i = 0; i < strEclWatchHostPortArray.length(); i++)
         {
-            for (int i = 0; i < strEclWatchHostPortArray.length(); i++)
-            {
-                strCommandConfig.append(P_ECLWATCH_FLAG).append(strEclWatchHostPortArray.item(i));
-            }
+            strCommandConfig.append(P_ECLWATCH_FLAG).append(strEclWatchHostPortArray.item(i));
         }
-        else
+    }
+    else
+    {
+        for (int i = 0; i < strArrayIPPort.length(); i++)
         {
-            for (int i = 0; i < strArrayIPPort.length(); i++)
-            {
-                strCommandConfig.append(P_ECLWATCH_FLAG).append(strArrayIPPort.item(i));
-            }
+            strCommandConfig.append(P_ECLWATCH_FLAG).append(strArrayIPPort.item(i));
         }
     }
 
