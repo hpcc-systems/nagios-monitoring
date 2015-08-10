@@ -23,4 +23,12 @@
 #####################################################
 project( check_roxie )
 
-INSTALL(PROGRAMS check_roxie DESTINATION /usr/lib/nagios/plugins/)
+IF ( "${packageManagement}" STREQUAL "RPM" )
+        IF ( "${ARCH64BIT}" EQUAL 1 )
+                install ( PROGRAMS check_roxie DESTINATION /usr/lib64/nagios/plugins/ )
+        ELSE ()
+                install ( PROGRAMS check_roxie DESTINATION /usr/lib/nagios/plugins/ )
+        ENDIF ()
+ELSE ()
+        install ( PROGRAMS check_roxie DESTINATION /usr/lib/nagios/plugins/ )
+ENDIF ()
