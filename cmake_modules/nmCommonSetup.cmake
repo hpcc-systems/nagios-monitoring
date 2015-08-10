@@ -22,6 +22,11 @@ else ()
 endif ()
 message ("-- 64bit architecture is ${ARCH64BIT}")
 
+  EXECUTE_PROCESS (
+                COMMAND ${CMAKE_MODULE_PATH}/distrocheck.sh
+                    OUTPUT_VARIABLE packageManagement
+                        ERROR_VARIABLE  packageManagement
+                )
 
 IF ("${COMMONSETUP_DONE}" STREQUAL "")
   SET (COMMONSETUP_DONE 1)
@@ -63,7 +68,7 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
   option(CHECK_GIT_TAG "Require git tag to match the generated build tag" OFF)
   option(USE_XALAN "Configure use of xalan" ON)
   option(USE_APR "Configure use of Apache Software Foundation (ASF) Portable Runtime (APR) libraries" OFF)
-  option(USE_LIBXSLT "Configure use of libxslt" OFF)
+  option(USE_LIBXSLT "Configure use of libxslt" ON)
   option(MAKE_DOCS "Create documentation at build time." OFF)
   option(MAKE_DOCS_ONLY "Create a base build with only docs." OFF)
   option(DOCS_DRUPAL "Create Drupal HTML Docs" OFF)
