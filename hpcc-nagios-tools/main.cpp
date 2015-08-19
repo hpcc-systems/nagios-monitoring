@@ -58,8 +58,8 @@ Usage: hpcc-nagios-tools -env /tmp/env190.xml -u \"\\$USER3\\$\" -p \"\\$USER4\\
     std::cout << "  -checkperiod <val>          : host check period (Default: " << CHPCCNagiosToolSet::m_pCheckPeriod << ")\n";
     std::cout << "  -contacts <val>             : host contacts     (Default: " << CHPCCNagiosToolSet::m_pContacts << ")\n";
     std::cout << "  -contactgroups <val>        : host contact groups (Default: " << CHPCCNagiosToolSet::m_pContactGroups << ")\n";
-    std::cout << "  -notify_interval <val>      : host contact groups (Default: " << CHPCCNagiosToolSet::m_nNotificationInterval << ")\n";
-    std::cout << "  -notify_period <val>        : host contact groups (Default: " << CHPCCNagiosToolSet::m_pNotificationPeriod << ")\n";
+    std::cout << "  -notify_interval <val>      : set notification interval (Default: " << CHPCCNagiosToolSet::m_nNotificationInterval << ")\n";
+    std::cout << "  -notify_period <val>        : set notification period (Default: " << CHPCCNagiosToolSet::m_pNotificationPeriod << ")\n";
     std::cout << "  -override_check_all_disks <val> : check_all_disk plugin name (Default: " << CHPCCNagiosToolSet::m_pCheckDiskSpace << ")\n";
     std::cout << "  -override_check_users <val>     : check_users plugin name (Default: " << CHPCCNagiosToolSet::m_pCheckUsers << ")\n";
     std::cout << "  -override_check_procs <val>     : check_procs plugin name (Default: " << CHPCCNagiosToolSet::m_pCheckProcs << ")\n";
@@ -76,10 +76,9 @@ Usage: hpcc-nagios-tools -env /tmp/env190.xml -u \"\\$USER3\\$\" -p \"\\$USER4\\
     std::cout << "  -override_retry_check_interval <val>    : retry_check_interval (Default: " << CHPCCNagiosToolSet::m_nRetryCheckInterval << ")\n";
     std::cout << "  -override_flap_detection_enabled <val>  : flap_detection_enabled (Default: " << CHPCCNagiosToolSet::m_nFlapDetectionEnabled << ")\n";
     std::cout << "  -override_process_perf_data <val>       : process_perf_data (Default: " << CHPCCNagiosToolSet::m_nProcessPerfData << ")\n";
-    std::cout << "  -override_failure_prediction_enabled <val>  : failure_prediction_enabled (Default: " << CHPCCNagiosToolSet::m_nFailuerPredictionEnabled << ")\n";
+    std::cout << "  -override_failure_prediction_enabled <val>  : failure_prediction_enabled (Default: " << CHPCCNagiosToolSet::m_nFailurePredictionEnabled << ")\n";
     std::cout << "  -override_retain_status_information <val>   : retain_status_information (Default: " << CHPCCNagiosToolSet::m_nRetainStatusInformation << ")\n";
     std::cout << "  -override_retain_nonstatus_information <val>: retain_nonstatus_information (Default: " << CHPCCNagiosToolSet::m_nRetainNonStatusInformation << ")\n";
-    std::cout << "  -override_retain_nonstatus_information <val>: notification_interval (Default: " << CHPCCNagiosToolSet::m_nNotificationInterval << ")\n";
     std::cout << "  -disable_check_all_disks        : disable disk space checks\n";
     std::cout << "  -disable_check_users            : disable user logged on checks\n";
     std::cout << "  -disable_check_procs            : disable process checks\n";
@@ -553,6 +552,29 @@ int main(int argc, char *argv[])
                 exit(1);
             }
         }
+        else if (stricmp(argv[i], "-override_retry_interval") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_retry_interval value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nRetryInteval = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_active_checks_enabled") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_active_checks_enabled value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nActiveChecksEnabled = atoi(argv[i]);
+
+        }
         else if (stricmp(argv[i], "-override_check_load") == 0)
         {
             i++;
@@ -566,6 +588,149 @@ int main(int argc, char *argv[])
                 std::cout << "invalid override_check_load value";
                 exit(1);
             }
+        }
+        else if (stricmp(argv[i], "-override_passive_checks_enabled") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_passive_checks_enabled value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nPassiveChecksEnabled = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_parallelize_check") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_parallelize_check value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nParallelizeCheck = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_obsess_over_service") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_obsess_over_service value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nObsessOverService = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_check_freshness") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_check_freshness value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nCheckFreshness = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_event_handler_enabled") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_event_handler_enabled value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nEventHandlerEnabled = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_is_volatile") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_is_volatile value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nIsVolatile = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_normal_check_interval") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_normal_check_interval value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nNormalCheckInterval = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_retry_check_interval") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_retry_check_interval value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nRetryCheckInterval = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_flap_detection_enabled") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_flap_detection_enabled value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nFlapDetectionEnabled = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_process_perf_data") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_process_perf_data value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nProcessPerfData = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_failure_prediction_enabled") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_failure_prediction_enabled value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nFailurePredictionEnabled = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_retain_status_information") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_retain_status_information value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nRetainStatusInformation = atoi(argv[i]);
+        }
+        else if (stricmp(argv[i], "-override_retain_nonstatus_information") == 0)
+        {
+            i++;
+
+            if (argv[i] == NULL || *argv[i] == 0)
+            {
+                std::cout << "invalid override_retain_nonstatus_information value";
+                exit(1);
+            }
+            CHPCCNagiosToolSet::m_nRetainNonStatusInformation = atoi(argv[i]);
         }
         else if (stricmp(argv[i], "-use_https") == 0)
         {
