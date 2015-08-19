@@ -70,7 +70,7 @@ public:
     static int  m_nCheckFreshness;
     static int  m_nEventHandlerEnabled;
     static int  m_nFlapDetectionEnabled;
-    static int  m_nFailuerPredictionEnabled;
+    static int  m_nFailurePredictionEnabled;
     static int  m_nProcessPerfData;
     static int  m_nRetainStatusInformation;
     static int  m_nRetainNonStatusInformation;
