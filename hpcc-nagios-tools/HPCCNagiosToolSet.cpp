@@ -73,7 +73,7 @@ int  CHPCCNagiosToolSet::m_nObsessOverService                   = CHPCCNagiosToo
 int  CHPCCNagiosToolSet::m_nCheckFreshness                      = CHPCCNagiosToolSet::m_nDisabled;
 int  CHPCCNagiosToolSet::m_nEventHandlerEnabled                 = CHPCCNagiosToolSet::m_nEnabled;
 int  CHPCCNagiosToolSet::m_nFlapDetectionEnabled                = CHPCCNagiosToolSet::m_nEnabled;
-int  CHPCCNagiosToolSet::m_nFailuerPredictionEnabled            = CHPCCNagiosToolSet::m_nEnabled;
+int  CHPCCNagiosToolSet::m_nFailurePredictionEnabled            = CHPCCNagiosToolSet::m_nEnabled;
 int  CHPCCNagiosToolSet::m_nProcessPerfData                     = CHPCCNagiosToolSet::m_nEnabled;
 int  CHPCCNagiosToolSet::m_nRetainStatusInformation             = CHPCCNagiosToolSet::m_nDisabled;
 int  CHPCCNagiosToolSet::m_nRetainNonStatusInformation          = CHPCCNagiosToolSet::m_nDisabled;
@@ -182,7 +182,7 @@ public:
                     .append(P_NAGIOS_SERVICE_RETAIN_NONSTATUS_INFORMATION).append(CHPCCNagiosToolSet::m_nRetainNonStatusInformation)\
                     .append(P_NAGIOS_SERVICE_EVENT_HANDLER_ENABLED).append(CHPCCNagiosToolSet::m_nEventHandlerEnabled)\
                     .append(P_NAGIOS_SERVICE_FLAP_DETECTION_ENABLED).append(CHPCCNagiosToolSet::m_nFlapDetectionEnabled)\
-                    .append(P_NAGIOS_SERVICE_FAILURE_PREDICTION_ENABLED).append(CHPCCNagiosToolSet::m_nFailuerPredictionEnabled)\
+                    .append(P_NAGIOS_SERVICE_FAILURE_PREDICTION_ENABLED).append(CHPCCNagiosToolSet::m_nFailurePredictionEnabled)\
                     .append(P_NAGIOS_HOST_CONFIG_MAX_CHECK_ATTEMPTS).append(CHPCCNagiosToolSet::m_uMaxCheckAttempts)\
                     .append(P_NAGIOS_HOST_CONFIG_CHECK_PERIOD).append(CHPCCNagiosToolSet::m_pCheckPeriod)\
 /*                    .append(P_NAGIOS_HOST_CONFIG_CONTACTS).append(CHPCCNagiosToolSet::m_pContacts)\*/
@@ -1328,7 +1328,7 @@ bool CHPCCNagiosToolSet::generateNagiosServiceEscalationConfig(StringBuffer &str
     strServiceConfig.append(P_NAGIOS_SERVICE_CHECK_FRESHNESS).append(m_nCheckFreshness);
     strServiceConfig.append(P_NAGIOS_SERVICE_EVENT_HANDLER_ENABLED).append(m_nEventHandlerEnabled);
     strServiceConfig.append(P_NAGIOS_SERVICE_FLAP_DETECTION_ENABLED).append(m_nFlapDetectionEnabled);
-    strServiceConfig.append(P_NAGIOS_SERVICE_FAILURE_PREDICTION_ENABLED).append(m_nFailuerPredictionEnabled);
+    strServiceConfig.append(P_NAGIOS_SERVICE_FAILURE_PREDICTION_ENABLED).append(m_nFailurePredictionEnabled);
     strServiceConfig.append(P_NAGIOS_SERVICE_PROCESS_PERF_DATA).append(m_nProcessPerfData);
     strServiceConfig.append(P_NAGIOS_SERVICE_RETAIN_STATUS_INFORMATION).append(m_nRetainStatusInformation);
     strServiceConfig.append(P_NAGIOS_SERVICE_RETAIN_NONSTATUS_INFORMATION).append(m_nRetainNonStatusInformation);
