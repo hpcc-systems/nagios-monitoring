@@ -24,6 +24,7 @@ static const char *P_CHECK_SASHA("check_sasha");
 static const char *P_CHECK_ROXIE("check_roxie");
 static const char *P_SSH("ssh");
 static const char *P_CHECK_DAFILESRV("check_dafilesrv");
+static const char *P_CHECK_THORMASTER("check_thormaster");
 static const char *P_HTTP("http");
 static const char *P_HTTPS("https");
 static const char *P_BY_TYPE(" -t ");
