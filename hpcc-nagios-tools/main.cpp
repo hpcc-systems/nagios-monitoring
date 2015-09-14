@@ -60,6 +60,7 @@ Usage: hpcc-nagios-tools -env /tmp/env190.xml -u \"\\$USER3\\$\" -p \"\\$USER4\\
     std::cout << "  -contactgroups <val>        : host contact groups (Default: " << CHPCCNagiosToolSet::m_pContactGroups << ")\n";
     std::cout << "  -notify_interval <val>      : set notification interval (Default: " << CHPCCNagiosToolSet::m_nNotificationInterval << ")\n";
     std::cout << "  -notify_period <val>        : set notification period (Default: " << CHPCCNagiosToolSet::m_pNotificationPeriod << ")\n";
+    std::cout << "  -set_esp_username_pw <esp name> <username> <password> : set specific logins credentials for esp checks.  All fields are required. Can be specified more than 1x\n";
     std::cout << "  -override_check_all_disks <val> : check_all_disk plugin name (Default: " << CHPCCNagiosToolSet::m_pCheckDiskSpace << ")\n";
     std::cout << "  -override_check_users <val>     : check_users plugin name (Default: " << CHPCCNagiosToolSet::m_pCheckUsers << ")\n";
     std::cout << "  -override_check_procs <val>     : check_procs plugin name (Default: " << CHPCCNagiosToolSet::m_pCheckProcs << ")\n";
@@ -83,7 +84,7 @@ Usage: hpcc-nagios-tools -env /tmp/env190.xml -u \"\\$USER3\\$\" -p \"\\$USER4\\
     std::cout << "  -disable_check_users            : disable user logged on checks\n";
     std::cout << "  -disable_check_procs            : disable process checks\n";
     std::cout << "  -disable_check_load             : disable load check\n";
-    std::cout << "  -disable_use_of_note_for_host_port  : the send command will use the detail/note for host:ip insteaad of param (Default: true) \n";
+    std::cout << "  -disable_use_of_note_for_host_port  : the send command will use the detail/note for host:ip instead of param (Default: true) \n";
     std::cout << "  -use_https                      : use https connection for esp service calls (HIGHLY RECOMMENDED when using username/password)\n";
     std::cout << "  -d or -debug                    : verbose debug output\n\n";
 }
@@ -108,6 +109,11 @@ int main(int argc, char *argv[])
     {
         usage();
         return 0;
+    }
+
+    for (int c = 1; c < argc; c++)
+    {
+        CHPCCNagiosToolSet::m_strCommandLine.append(argv[c]).append(" ");
     }
 
     while (i < argc)
@@ -238,6 +244,20 @@ int main(int argc, char *argv[])
 
             i++;
             strncpy(CHPCCNagiosToolSet::m_pPasswordMacro, argv[i], sizeof(CHPCCNagiosToolSet::m_pPasswordMacro));
+        }
+        else if (stricmp(argv[i], "-set_esp_username_pw") == 0)
+        {
+            CHPCCNagiosToolSet::m_bUseAuthentication  = true;
+            static int nOverrideCount = 0;
+
+            i++;
+            (CHPCCNagiosToolSet::m_EspUserNamePWOverrides[nOverrideCount]).set(argv[i]);
+            i++;
+            (CHPCCNagiosToolSet::m_pUserMacroArray[nOverrideCount]).set(argv[i]);
+            i++;
+            (CHPCCNagiosToolSet::m_pPasswordMacroArray[nOverrideCount]).set(argv[i]);
+
+            nOverrideCount++;
         }
         else if (stricmp(argv[i], "-d") == 0 || stricmp(argv[i], "-debug") == 0)
         {
