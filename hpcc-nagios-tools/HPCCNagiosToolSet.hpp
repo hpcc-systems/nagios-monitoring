@@ -3,6 +3,7 @@
 
 #include "HPCCNagiosToolSetCommon.hpp"
 #include "build-config.h"
+#include "jutil.hpp"
 
 static const char *PCONFIGGEN_PATH(ADMIN_DIR"/configgen");
 static const char *PENV_XML(CONFIG_DIR"/environment.xml");
@@ -13,6 +14,7 @@ class StringBuffer;
 #define BUFFER_SIZE_1   64
 #define BUFFER_SIZE_2   BUFFER_SIZE_1*4
 #define URL_BUFFER_SIZE 2048
+#define MAX_CUSTOM_VARS 32
 
 class CHPCCNagiosHostEvent
 {
@@ -55,6 +57,10 @@ public:
     static char m_pSeparator[BUFFER_SIZE_1];
     static char m_pUserMacro[BUFFER_SIZE_1];
     static char m_pPasswordMacro[BUFFER_SIZE_1];
+    static StringBuffer m_pUserMacroArray[MAX_CUSTOM_VARS];  // support for 32 user variables
+    static StringBuffer m_pPasswordMacroArray[MAX_CUSTOM_VARS];
+    static StringBuffer m_EspUserNamePWOverrides[MAX_CUSTOM_VARS];
+    static StringBuffer m_strCommandLine;
 
     static int  m_pCheckInterval;
     static char m_pCheckPeriod[BUFFER_SIZE_1];
@@ -134,6 +140,9 @@ private:
     static bool getConfigGenOutput(const char* pEnvXML, const char* pConfigGenPath, const char* pCommandLine, StringBuffer &strBuff);
     static bool addCommonParamsToSendStatus(StringBuffer &strCommandConfig, const char* pUserMacro, const char* pPasswordMacro, const bool bUseHTTPS, const bool bAppendHostPortFromDetail,
                                             const char  *pURL);
+    static const char* getEspUserName(const char *pEspName, const char* pDefaultUserName);
+    static const char* getEspPassword(const char *pEspName, const char* pDefaultPassword);
+    static void appendHeader(StringBuffer &strBuffer);
 };
 
 #endif // _HPCC_NAGIOSTOOLSET_HPP_
