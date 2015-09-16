@@ -1188,18 +1188,19 @@ bool CHPCCNagiosToolSet::generateNagiosThorCheckConfig(StringBuffer &strServiceC
                 }
                 continue;
             }
-            else if (pProcess != NULL && *pProcess != 0 && strcmp(pProcess, pch) != 0)
+            else if (pProcess != NULL && *pProcess != 0)
+            {
+                if (strcmp(pProcess, pch) != 0)
+                {
+                    strncpy(pProcess, pch, sizeof(pProcess));
+                    i = 0;
+                }
+                else
+                    i++;
+            }
+            else
             {
                 strncpy(pProcess, pch, sizeof(pProcess));
-                i = 0;
-            }
-            else if (pProcess == NULL || *pProcess == 0 || strcmp(pProcess, pch) != 0)
-            {
-                strncpy(pProcess, pch, sizeof(pProcess));
-                i++;
-            }
-            else if (strcmp(pProcess,pch) == 0)
-            {
                 i++;
             }
         }
