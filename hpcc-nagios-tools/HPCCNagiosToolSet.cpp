@@ -33,6 +33,7 @@ const char *P_DALI("dali");
 const char *P_SASHA("sasha");
 const char *P_ROXIE("roxie");
 const char *P_DAFILESRV("dafilesrv");
+const char *P_THOR("thor");
 
 const char *P_ECLWATCH_FLAG(" -e ");
 const char *P_USER_MACRO_FLAG(" -u ");
@@ -556,6 +557,7 @@ bool CHPCCNagiosToolSet::generateServerAndHostConfigurationFile(const char* pOut
 
     CHPCCNagiosToolSet::generateNagiosEspServiceConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosDaliCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
+    CHPCCNagiosToolSet::generateNagiosThorCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosSashaCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosRoxieCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
     CHPCCNagiosToolSet::generateNagiosDafileSrvCheckConfig(strServiceConfig, pEnvXML, pConfigGenPath);
@@ -1151,6 +1153,111 @@ bool CHPCCNagiosToolSet::generateNagiosSystemCheckConfig(StringBuffer &strServic
 
                 strServiceConfig.append(P_NAGIOS_SERVICE_END_BRACKET).append("\n");
             }
+        }
+
+        pch = strtok(NULL, ",\n");
+
+        nCount++;
+    }
+
+    free(pOutput);
+
+    return true;
+}
+
+bool CHPCCNagiosToolSet::generateNagiosThorCheckConfig(StringBuffer &strServiceConfig, const char* pEnvXML, const char* pConfigGenPath)
+{
+    const int nNumValues = 5;
+
+    char *pOutput = CHPCCNagiosToolSet::invokeConfigGen(pEnvXML, pConfigGenPath, P_CONFIGGEN_PARAM_LIST_ALL, P_THOR);
+
+    if (pOutput == NULL)
+        return false;
+
+    int i = -1;
+    char pProcess[BUFFER_SIZE_3] = "";
+    int nCount = 0;
+    char *pch = NULL;
+    pch = strtok(pOutput, ",\n");
+    StringBuffer strPort;
+    StringBuffer strIPAddress;
+    char pHostName[BUFFER_SIZE_3] = "";
+    char pProcessName[BUFFER_SIZE_3] = "";
+
+    while (pch != NULL)
+    {
+        if (nCount % nNumValues ==  0) // Process name
+        {
+            if (*pch != 0 && strcmp(pch, XML_TAG_THORMASTERPROCESS) != 0 && strcmp(pch, XML_TAG_THORSLAVEPROCESS) != 0 && strcmp(pch, XML_TAG_THORSPAREPROCESS) != 0)
+            {
+                free(pOutput);
+                return false;  // expecting only thor processes
+            }
+            else if (strcmp(pch, XML_TAG_THORSLAVEPROCESS) == 0 || strcmp(pch, XML_TAG_THORSPAREPROCESS) == 0)
+            {
+                for (int i = 0; i < nNumValues; i++)
+                {
+                    pch = strtok(NULL, ",\n");
+                    nCount++;
+                }
+                continue;
+            }
+            else if (pProcess != NULL && *pProcess != 0)
+            {
+                if (strcmp(pProcess, pch) != 0)
+                {
+                    strncpy(pProcess, pch, sizeof(pProcess));
+                    i = 0;
+                }
+                else
+                    i++;
+            }
+            else
+            {
+                strncpy(pProcess, pch, sizeof(pProcess));
+                i++;
+            }
+        }
+        else if (nCount % nNumValues == 1) // process name
+        {
+            strcpy(pProcessName,pch);
+        }
+        else if (nCount % nNumValues == 2) // IP Address
+        {
+            strIPAddress.clear().append(pch);
+
+            struct hostent* hp = NULL;
+
+            if (bDoLookUp == true)
+            {
+                unsigned int addr = inet_addr(pch);
+                hp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
+            }
+
+            if (hp == NULL)
+            {
+                bDoLookUp =  m_retryHostNameLookUp;
+                strcpy(pHostName, pch);
+            }
+            else
+            {
+                strcpy(pHostName,hp->h_name);
+            }
+        }
+        else if (nCount % nNumValues == 3)
+        {
+            strPort.clear().append(pch);
+        }
+        else if (nCount % nNumValues == 4)
+        {
+            VStringBuffer strNote("check for %s of type %s %s%s:%s", pProcessName, pProcess, CHPCCNagiosToolSet::m_pSeparator, strIPAddress.str(), strPort.str());
+
+            strServiceConfig.append(P_NAGIOS_SERVICE_CONFIG_2).append(pHostName).append(P_NAGIOS_SERVICE_DESCRIPTION).append(strNote.str())\
+                    .append(P_NAGIOS_SERVICE_CHECK_COMMAND).append(CHPCCNagiosToolSet::m_pNRPE).append(P_CHECK_THORMASTER).append(P_NAGIOS_SEPERATOR).append(strPort.str());
+
+            CHPCCNagiosToolSet::generateNagiosServiceEscalationConfig(strServiceConfig, XML_TAG_THORMASTERPROCESS, strNote.str());
+
+            strServiceConfig.append(P_NAGIOS_SERVICE_END_BRACKET).append("\n");
         }
 
         pch = strtok(NULL, ",\n");
