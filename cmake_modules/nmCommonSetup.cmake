@@ -161,6 +161,7 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
   message ("-- 64bit architecture is ${ARCH64BIT}")
 
   set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG -DDEBUG")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
   set (CMAKE_THREAD_PREFER_PTHREAD 1)
   find_package(Threads)
