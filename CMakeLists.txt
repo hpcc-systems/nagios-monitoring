@@ -103,7 +103,7 @@ set (CPACK_RPM_PACKAGE_VERSION "${version}" )
 set (CPACK_RPM_PACKAGE_RELEASE "${stagever}")
 
 # Fix filesystem conflict error, This fix requires cmake 3+
-SET(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/etc/nagios;/etc/nagios/conf.d;/etc/nrpe.d;/usr/lib64/nagios" )
+SET(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/etc/nagios;/etc/nagios/conf.d;/etc/nrpe.d;/usr/lib64/nagios;/usr/lib64/nagios/plugins" )
 
 MESSAGE ( "CPACK_RPM_PACKAGE_ARCHITECTURE ${CPACK_RPM_PACKAGE_ARCHITECTURE}" )
 MESSAGE ( "CPACK_SYSTEM_NAME ${CPACK_SYSTEM_NAME}" )
