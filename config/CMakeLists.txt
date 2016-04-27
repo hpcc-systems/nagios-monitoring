@@ -24,8 +24,8 @@
 
 IF ( "${packageManagement}" STREQUAL "RPM" )
         INSTALL ( FILES hpcc_nrpe.cfg DESTINATION /etc/nrpe.d/  )
-        INSTALL ( FILES hpcc_nagios.cfg DESTINATION /etc/nagios/conf.d/ )
+        INSTALL ( FILES hpcc_commands.cfg DESTINATION /etc/nagios/conf.d/ )
 ELSE ()
 	INSTALL(FILES hpcc_nrpe.cfg DESTINATION   /etc/nagios/nrpe.d/)
-	INSTALL(FILES hpcc_nagios.cfg DESTINATION /etc/nagios3/conf.d/)
+	INSTALL(FILES hpcc_commands.cfg DESTINATION /etc/nagios3/conf.d/)
 ENDIF ()
