@@ -1,2 +1,0 @@
-set ( CPACK_RPM_PACKAGE_REQUIRES "hpccsystems-platform >= ${HPCC_MAJOR}.${HPCC_MINOR}.${HPCC_POINT}, nagios, nagios-plugins, nrpe" )
-
