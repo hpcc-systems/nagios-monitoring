@@ -26,7 +26,8 @@ project( check_sasha )
 
 set (   SRCS
         main.cpp
-    )
+        ${HPCC_SOURCE_DIR}/dali/sasha/sacmd.cpp
+        )
 
 include_directories (
         ${HPCC_SOURCE_DIR}/common
