@@ -674,7 +674,7 @@ bool CHPCCNagiosToolSet::getConfigGenOutput(const char* pEnvXML, const char* pCo
         const size32_t chunkSize = 8192;
         int nTotalBytes = 0;
 
-        loop
+        for(;;)
         {
             size32_t sizeRead = pipeReader->read(chunkSize, strBuff.reserve(chunkSize));
 
