@@ -1,58 +1,49 @@
 #!/usr/bin/python
 
-import sys, re, os, random
+from __future__ import print_function
+import os
+import random
+import re
+import sys
 
-#Output usage if argument is missing
+# Output usage if argument is missing
 try:
         IP = sys.argv[1]
 except IndexError:
-                print "\nNeeds IP address of the target server"
-                print """
+                print("\nNeeds IP address of the target server")
+                print("""
 Usage:
-        /usr/lib64/nagios/plugins/check_roxie <ip-address>
-"""
+        check_roxie <ip-address>
+""")
                 sys.exit(1)
 
 status = os.popen("2>/dev/null testsocket %s \"<control:alive/>\"" % IP)
 status_result = status.read()
 roxie_status = re.findall('\<Status\>(.+?)\</Status\>+?', status_result)
-servers = os.popen("2>/dev/null testsocket %s \"<control:topology/>\"" % IP)
-servers_result = servers.read()
-servers_list = re.findall('netAddress="(.*?)"/>', servers_result)
 
-#Check if roxie process is up and running
-if len(roxie_status) > 0:
+# Check if roxie process is up and running
+if roxie_status:
         if roxie_status[0] == 'ok':
-		#Get state hash if roxie cluster has less than 5 servers
+                # Get state hashes from roxie cluster
                 hashes = []
-                if len(servers_list) <= 5:
-                        for i in servers_list:
-                                try:
-                                        state = os.popen("2>/dev/null testsocket %s \"<control:state/>\"" % IP)
-                                        state_result = state.read()
-                                        state_hash = re.findall("hash='(.*?)'", state_result)
+                try:
+                        cluster_state = os.popen("2>/dev/null testsocket %s -lock \"<control:state/>\"" % IP)
+                        cluster_state_result = cluster_state.readlines()
+                        for i in cluster_state_result:
+                                if "hash" in i:
+                                        state_hash = re.findall("hash=\"(.*?)\"", i)
                                         hashes.append(state_hash[0])
-                                except:
-                                        continue
-		#If roxie cluster has more than 5 servers just randomly get the state hash on 5 servers
-                elif len(servers_list) > 5:
-                        for i in range(5):
-                                try:
-                                        randomServer = random.choice(servers_list)
-                                        state = os.popen("2>/dev/null testsocket %s \"<control:state/>\"" % randomServer)
-                                        state_result = state.read()
-                                        state_hash = re.findall("hash='(.*?)'", state_result)
-                                        hashes.append(state_hash[0])
-                                except:
-                                        continue
+                except:
+                        pass
+
                 total_hashes = len(hashes)
                 same_hash = []
                 different_hash = []
-		#Compare hash state between self and cluster
+                # Compare hash state between self and cluster
                 while total_hashes > 0:
-                        state = os.popen("2>/dev/null testsocket %s \"<control:state/>\"" % IP)
-                        state_result = state.read()
-                        my_hash = re.findall("hash='(.*?)'", state_result)
+                        local_state = os.popen("2>/dev/null testsocket %s \"<control:state/>\"" % IP)
+                        local_state_result = local_state.read()
+                        my_hash = re.findall("hash='(.*?)'", local_state_result)
                         for i in hashes:
                                 if my_hash[0] == i:
                                         same_hash.append(i)
@@ -60,23 +51,23 @@ if len(roxie_status) > 0:
                                 elif my_hash[0] != i:
                                         different_hash.append(i)
                                         total_hashes -= 1
-                if len(same_hash) < len(different_hash) and my_hash[0] in same_hash:
-                        print "Roxie process is running but there is a state mismatch ", my_hash[0].replace('\n', '')
-                        sys.exit(1)
-                elif len(same_hash) < len(different_hash) and my_hash[0] not in same_hash:
-                        print "Roxie process is running but there is a state mismatch ", my_hash[0].replace('\n', '')
-                        sys.exit(1)
-                elif len(same_hash) > len(different_hash) and my_hash[0] in same_hash:
-                        print "Roxie process is running and state hash match"
-                        sys.exit(0)
-                else:
-                        print "Roxie process is running but the cluster appears to have state mismatch"
-                        sys.exit(2)
-	else:
-		print "Roxie process is down"
-		sys.exit(2)
+                        if len(same_hash) < len(different_hash) and my_hash[0] in same_hash:
+                                print ("Roxie process is running but there is a state mismatch ", my_hash[0].replace('\n', ''))
+                                sys.exit(1)
+                        elif len(same_hash) < len(different_hash) and my_hash[0] not in same_hash:
+                                print ("Roxie process is running but there is a state mismatch ", my_hash[0].replace('\n', ''))
+                                sys.exit(1)
+                        elif len(same_hash) > len(different_hash) and my_hash[0] in same_hash:
+                                print ("Roxie process is running and state hash matches across roxie cluster")
+                                sys.exit(0)
+                        else:
+                                print ("Roxie process is running but roxie cluster appears to have state mismatch")
+                                sys.exit(2)
+        else:
+                print ("Roxie process is down")
+                sys.exit(2)
 
 else:
-        print "Roxie process is down"
+        print ("Roxie process is down")
         sys.exit(2)
 
