@@ -35,40 +35,37 @@ if roxie_status and roxie_status[ 0 ] == 'ok':
         cmd_cluster_state = '2>/dev/null testsocket %s -lock "<control:state/>"' % IP
         cluster_state = subprocess.Popen ( cmd_cluster_state.strip ( ) , stdout=subprocess.PIPE , shell=True )
         cluster_state_result = cluster_state.communicate ( )[ 0 ]
-        for cluster_result in cluster_state_result.split():
+        for cluster_result in cluster_state_result.split( ):
             if "hash" in cluster_result:
                 state_hash = re.findall ( "hash=\"(.*?)\"" , cluster_result )
                 hashes.append ( state_hash[ 0 ] )
     except:
         pass
 
-    total_hashes = len ( hashes )
-    same_hash = [ ]
-    different_hash = [ ]
+    myHashMatchWithOthers = False
+    numOfSameHashes = 0
+    numOfDifferentHashes = 0
 
     # Compare hash state between self and cluster
-    while total_hashes > 0:
-        for i in hashes:
-            if my_hash[ 0 ] == i:
-                same_hash.append ( i )
-                total_hashes -= 1
-            elif my_hash[ 0 ] != i:
-                different_hash.append ( i )
-                total_hashes -= 1
-        if len ( same_hash ) < len ( different_hash ) and my_hash[ 0 ] in same_hash:
-            print ( "Roxie process is running but there is a state mismatch " ,
-                    my_hash[ 0 ].replace ( '\n' , '' ) )
-            sys.exit ( warning )
-        elif len ( same_hash ) < len ( different_hash ) and my_hash[ 0 ] not in same_hash:
-            print ( "Roxie process is running but there is a state mismatch " ,
-                    my_hash[ 0 ].replace ( '\n' , '' ) )
-            sys.exit ( warning )
-        elif len ( same_hash ) > len ( different_hash ) and my_hash[ 0 ] in same_hash:
-            print ( "Roxie process is running and state hash matches across roxie cluster" )
-            sys.exit ( ok )
-        else:
-            print ( "Roxie process is running but roxie cluster appears to have state mismatch" )
-            sys.exit ( warning )
+    for roxie_hash in hashes:
+        if my_hash[ 0 ] == roxie_hash:
+            myHashMatchWithOthers = True
+            numOfSameHashes += 1
+        elif my_hash[ 0 ] != roxie_hash:
+            numOfDifferentHashes += 1
+
+    if not myHashMatchWithOthers:
+        print ( "Roxie process is running but there is a state mismatch " , my_hash[ 0 ].replace ( '\n' , '' ) )
+        sys.exit ( warning )
+    elif numOfSameHashes < numOfDifferentHashes and myHashMatchWithOthers:
+        print ( "Roxie process is running but there is a state mismatch " , my_hash[ 0 ].replace ( '\n' , '' ) )
+        sys.exit ( warning )
+    elif numOfSameHashes > numOfDifferentHashes and myHashMatchWithOthers:
+        print ( "Roxie process is running and state hash matches across roxie cluster" )
+        sys.exit ( ok )
+    else:
+        print ( "Roxie process is running but roxie cluster appears to have state mismatch" )
+        sys.exit ( warning )
 else:
     print ( "Roxie process is down" )
     sys.exit ( critical )
