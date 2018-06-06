@@ -26,6 +26,8 @@ include(${HPCC_SOURCE_DIR}/cmake_modules/optionDefaults.cmake)
 include(${CMAKE_MODULE_PATH}/nmCommonSetup.cmake)
 include(${HPCC_NM_SOURCE_DIR}/platform-version-prereq.cmake)
 
+set(BUILD_TAG "${projname}_${version}-${stagever}")
+
 message(STATUS "HPCC_SOURCE_DIR: ${HPCC_SOURCE_DIR}")
 add_subdirectory(${HPCC_SOURCE_DIR} oss EXCLUDE_FROM_ALL)
 
@@ -42,6 +44,11 @@ message(STATUS "HPCC_NM_SOURCE_DIR ${HPCC_NM_SOURCE_DIR}")
 set(CPACK_PACKAGE_CONTACT "HPCCSystems <ossdevelopment@lexisnexis.com>")
 set(CPACK_SOURCE_GENERATOR TGZ)
 set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${CPACK_RPM_PACKAGE_ARCHITECTURE}")
+set(CPACK_PACKAGE_VERSION_MAJOR ${majorver})
+set(CPACK_PACKAGE_VERSION_MINOR ${minorver})
+set(CPACK_PACKAGE_VERSION_PATCH ${point}-${stagever})
+set(CPACK_RPM_PACKAGE_VERSION "${version}" )
+set(CPACK_RPM_PACKAGE_RELEASE "${stagever}")
 
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
     execute_process(
