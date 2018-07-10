@@ -21,6 +21,7 @@
 
 const int nOKRetValue = 0;
 const int nCriticalRetValue = 2;
+const int nUnknownRetValue = 3;
 const int nDefaultTimeOut=30 * 1000;
 const int nExceptionRetVal = -99;
 const int nDefaultPort = DAFILESRV_PORT;
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
     if (argc != 2 && argc != 3)
     {
         usage();
-        return 0;
+        return nUnknownRetValue;
     }
 
     if (argc == 3)
