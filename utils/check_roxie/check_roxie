@@ -14,7 +14,7 @@ except IndexError:
 Usage:
         check_roxie <ip-address>
 """ )
-    sys.exit ( 1 )
+    sys.exit ( 3 )
 
 # Nagios exit codes
 ok = 0
