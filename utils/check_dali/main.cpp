@@ -24,6 +24,7 @@
 
 const int nOKRetValue = 0;
 const int nCriticalRetValue = 2;
+const int nUnknownRetValue = 3;
 const int nDefaultTimeOut=30 * 1000;
 
 void usage()
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
     if (argc != 3 && argc != 4)
     {
         usage();
-        return 0;
+        return nUnknownRetValue;
     }
 
     int nTimeOut = (argc == 4 ? atoi(argv[3]) : nDefaultTimeOut);
