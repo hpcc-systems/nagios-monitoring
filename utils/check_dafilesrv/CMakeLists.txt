@@ -33,6 +33,7 @@ include_directories (
 	${HPCC_SOURCE_DIR}/common/remote
         ${HPCC_SOURCE_DIR}/system/jlib
         ${HPCC_SOURCE_DIR}/system/include
+        ${HPCC_SOURCE_DIR}/fs/dafsclient
         ${CMAKE_BINARY_DIR}
         ${CMAKE_BINARY_DIR}/oss
     )
