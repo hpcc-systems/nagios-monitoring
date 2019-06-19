@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        initClientProcess(group, DCR_Other, 0, 0, 0, nTimeOut);
+        initClientProcess(group, DCR_Monitoring, 0, 0, 0, nTimeOut);
     }
     catch(IException *)
     {
