@@ -5,7 +5,7 @@ set ( HPCC_NAME "Nagios Monitoring" )
 set ( HPCC_PROJECT "nagios-monitoring" )
 set ( HPCC_MAJOR 7 )
 set ( HPCC_MINOR 6 )
-set ( HPCC_POINT 21 )
+set ( HPCC_POINT 23 )
 set ( HPCC_MATURITY "closedown" )
 set ( HPCC_SEQUENCE 0 )
 ###
