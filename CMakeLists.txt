@@ -133,6 +133,9 @@ if(CMAKE_SYSTEM MATCHES Linux)
         ###
         ## CPack instruction required for RPM
         ###
+	set(CPACK_RPM_SPEC_MORE_DEFINE
+          "%undefine __brp_mangle_shebangs"
+	)
         message("-- Will build RPM package")
         message("-- Packing BASH installation files")
         set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/postinst")
