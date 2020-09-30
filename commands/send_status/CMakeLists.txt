@@ -60,6 +60,7 @@ set (   SRCS
 
 include_directories (
         ${HPCC_SOURCE_DIR}/common
+        ${HPCC_SOURCE_DIR}/common/thorhelper
         ${HPCC_SOURCE_DIR}/system/jlib
         ${HPCC_SOURCE_DIR}/system/include
         ${HPCC_SOURCE_DIR}/esp/services/ws_machine
